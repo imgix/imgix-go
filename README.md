@@ -45,6 +45,8 @@ func main() {
 That's it at a basic level. More fun features though!
 
 ### Sharding Hosts
+**Warning: Domain Sharding has been deprecated and will be removed in the next major release**<br>
+To find out more, see our [blog post](https://blog.imgix.com/2019/05/03/deprecating-domain-sharding) explaining the decision to remove this feature.
 
 This client supports sharding hosts, by CRC or just by Cycle.
 
