@@ -12,7 +12,7 @@ This is a Go implementation of an imgix url-building library outlined by
 It's a go package. Do this in your terminal:
 
 ```bash
-go get github.com/parkr/imgix-go
+go get github.com/imgix/imgix-go
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ package main
 import (
     "fmt"
     "net/url"
-    "github.com/parkr/imgix-go"
+    "github.com/imgix/imgix-go"
 )
 
 func main() {
