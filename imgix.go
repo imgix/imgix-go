@@ -12,10 +12,14 @@ import (
 	"unicode/utf8"
 )
 
+// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
 type ShardStrategy string
 
 const (
-	ShardStrategyCRC   = ShardStrategy(":crc")
+	// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
+	ShardStrategyCRC = ShardStrategy(":crc")
+
+	// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
 	ShardStrategyCycle = ShardStrategy(":cycle")
 )
 
@@ -48,6 +52,8 @@ type Client struct {
 
 // The sharding strategy used by this client.
 // Panics if the sharding strategy is not supported by this library.
+//
+// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
 func (c *Client) ShardStrategy() ShardStrategy {
 	switch c.shardStrategy {
 	case ShardStrategyCRC, ShardStrategyCycle:
@@ -67,6 +73,8 @@ func (c *Client) Secure() bool {
 
 // Returns a host at the given index.
 // Panics if there are no hosts.
+//
+// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
 func (c *Client) Hosts(index int) string {
 	if len(c.hosts) == 0 {
 		panic(fmt.Errorf("hosts must be provided"))
@@ -84,6 +92,8 @@ func (c *Client) Scheme() string {
 }
 
 // Returns the host for the given path.
+//
+// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
 func (c *Client) Host(path string) string {
 	var host string
 	switch c.ShardStrategy() {
