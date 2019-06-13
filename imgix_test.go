@@ -8,7 +8,7 @@ import (
 )
 
 func testClient() Client {
-	return NewClient("prod.imgix.net", "stag.imgix.net", "dev.imgix.net")
+	return NewClient("prod.imgix.net")
 }
 
 func testClientWithToken() Client {
@@ -104,42 +104,6 @@ func TestClientFullyQualifiedUrlPathWithParams(t *testing.T) {
 	assert.Equal(t, "https://my-social-network.imgix.net/http%3A%2F%2Favatars.com%2Fjohn-smith.png?h=300&w=400&s=a201fe1a3caef4944dcb40f6ce99e746", c.PathWithParams("http://avatars.com/john-smith.png", params))
 }
 
-func TestClientFallbackShardStrategy(t *testing.T) {
-	c := testClient()
-	assert.Equal(t, ShardStrategy(""), c.shardStrategy)
-	assert.Equal(t, ShardStrategyCycle, c.ShardStrategy())
-}
-
-func TestClientHostUsingCRC(t *testing.T) {
-	c := testClient()
-	c.shardStrategy = ShardStrategyCRC
-	assert.Equal(t, "prod.imgix.net", c.Host("/1/users.jpg"))
-	assert.Equal(t, "dev.imgix.net", c.Host("/2/ellothere.png"))
-}
-
-func TestClientHostUsingCycle(t *testing.T) {
-	c := testClient()
-	c.shardStrategy = ShardStrategyCycle
-	assert.Equal(t, "prod.imgix.net", c.Host("/1/users.jpg"))
-	assert.Equal(t, "stag.imgix.net", c.Host("/1/users.jpg"))
-	assert.Equal(t, "dev.imgix.net", c.Host("/1/users.jpg"))
-	assert.Equal(t, "prod.imgix.net", c.Host("/1/users.jpg"))
-}
-
-func TestClientShardStrategyValidation(t *testing.T) {
-	defer func() {
-		if r := recover(); r != nil {
-			e, ok := r.(error)
-			assert.True(t, ok)
-			assert.EqualError(t, e, "shard strategy 'hellothere' is not supported")
-		}
-	}()
-
-	c := testClient()
-	c.shardStrategy = ShardStrategy("hellothere")
-	c.ShardStrategy()
-}
-
 func TestClientHostsCountValidation(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -150,6 +114,6 @@ func TestClientHostsCountValidation(t *testing.T) {
 	}()
 
 	c := testClient()
-	c.hosts = []string{}
-	c.Hosts(1)
+	c.domain = string("")
+	c.Domain()
 }
