@@ -5,22 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"hash/crc32"
 	"net/url"
 	"regexp"
 	"strings"
 	"unicode/utf8"
-)
-
-// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
-type ShardStrategy string
-
-const (
-	// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
-	ShardStrategyCRC = ShardStrategy(":crc")
-
-	// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
-	ShardStrategyCycle = ShardStrategy(":cycle")
 )
 
 // Matches http:// and https://
@@ -29,57 +17,26 @@ var RegexpHTTPAndS = regexp.MustCompile("https?://")
 // Regexp for all characters we should escape in a URI passed in.
 var RegexUrlCharactersToEscape = regexp.MustCompile("([^ a-zA-Z0-9_.-])")
 
-// Create a new Client with the given hosts, with HTTPS enabled.
-func NewClient(hosts ...string) Client {
-	return Client{hosts: hosts, secure: true}
+// Create a new Client with the given domain, with HTTPS enabled.
+func NewClient(domain string) Client {
+	return Client{domain: domain, secure: true}
 }
 
-// Create a new Client with the given host and token. HTTPS enabled.
-func NewClientWithToken(host string, token string) Client {
-	return Client{hosts: []string{host}, secure: true, token: token}
+// Create a new Client with the given domain and token. HTTPS enabled.
+func NewClientWithToken(domain string, token string) Client {
+	return Client{domain: domain, secure: true, token: token}
 }
 
 // The Client is used to build URLs.
 type Client struct {
-	hosts         []string
-	token         string
-	secure        bool
-	shardStrategy ShardStrategy
-
-	// For use with ShardStrategyCycle
-	cycleIndex int
-}
-
-// The sharding strategy used by this client.
-// Panics if the sharding strategy is not supported by this library.
-//
-// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
-func (c *Client) ShardStrategy() ShardStrategy {
-	switch c.shardStrategy {
-	case ShardStrategyCRC, ShardStrategyCycle:
-		return c.shardStrategy
-	case "":
-		c.shardStrategy = ShardStrategyCycle
-		return c.shardStrategy
-	default:
-		panic(fmt.Errorf("shard strategy '%s' is not supported", c.shardStrategy))
-	}
+	domain string
+	token  string
+	secure bool
 }
 
 // Returns whether HTTPS should be used.
 func (c *Client) Secure() bool {
 	return c.secure
-}
-
-// Returns a host at the given index.
-// Panics if there are no hosts.
-//
-// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
-func (c *Client) Hosts(index int) string {
-	if len(c.hosts) == 0 {
-		panic(fmt.Errorf("hosts must be provided"))
-	}
-	return c.hosts[index]
 }
 
 // Returns the URL scheme to use. One of 'http' or 'https'.
@@ -91,20 +48,9 @@ func (c *Client) Scheme() string {
 	}
 }
 
-// Returns the host for the given path.
-//
-// Deprecated: Domain Sharding has been deprecated and will be removed in the next major release
-func (c *Client) Host(path string) string {
-	var host string
-	switch c.ShardStrategy() {
-	case ShardStrategyCRC:
-		host = c.Hosts(c.crc32BasedIndexForPath(path))
-	case ShardStrategyCycle:
-		host = c.Hosts(c.cycleIndex)
-		c.cycleIndex = (c.cycleIndex + 1) % len(c.hosts)
-	}
-
-	return RegexpHTTPAndS.ReplaceAllString(host, "")
+// Returns the domain for the given path.
+func (c *Client) Domain() string {
+	return RegexpHTTPAndS.ReplaceAllString(c.domain, "") // Strips out the scheme if exists
 }
 
 // Creates and returns the URL signature in the form of "s=SIGNATURE" with
@@ -132,7 +78,7 @@ func (c *Client) SignatureForPathAndParams(path string, params url.Values) strin
 	return "s=" + hex.EncodeToString(hasher.Sum(nil))
 }
 
-// Builds the full URL to the image (including the host) with no params.
+// Builds the full URL to the image (including the domain) with no params.
 func (c *Client) Path(imgPath string) string {
 	return c.PathWithParams(imgPath, url.Values{})
 }
@@ -145,7 +91,7 @@ func (c *Client) Path(imgPath string) string {
 func (c *Client) PathWithParams(imgPath string, params url.Values) string {
 	u := url.URL{
 		Scheme: c.Scheme(),
-		Host:   c.Host(imgPath),
+		Host:   c.Domain(),
 	}
 
 	urlString := u.String()
@@ -190,11 +136,6 @@ func (c *Client) PathWithParams(imgPath string, params url.Values) string {
 	}
 
 	return urlString
-}
-
-func (c *Client) crc32BasedIndexForPath(path string) int {
-	crc := crc32.ChecksumIEEE([]byte(path))
-	return int(crc) % len(c.hosts)
 }
 
 // Base64-encodes a parameter according to imgix's Base64 variant requirements.
