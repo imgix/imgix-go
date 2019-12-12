@@ -1,15 +1,17 @@
-# imgix-go
+<!-- ix-docs-ignore -->
+![imgix logo](https://assets.imgix.net/sdk-imgix-logo.svg)
 
-This is a Go implementation of an imgix url-building library outlined by
-[imgix-blueprint](https://github.com/imgix/imgix-blueprint).
+`imgix-go` is a client library for generating image URLs with [imgix](https://www.imgix.com/).
 
-[Godoc](https://godoc.org/github.com/parkr/imgix-go)
+![Version](https://badge.fury.io/gh/imgix%2Fimgix-go.svg)
+[![Build Status](https://travis-ci.org/imgix/imgix-go.svg?branch=master)](https://travis-ci.org/parkr/imgix-go)
+[![Godoc](https://godoc.org/github.com/imgix/imgix-go?status.svg)](https://godoc.org/github.com/imgix/imgix-go)
+[![License](https://img.shields.io/github/license/imgix/imgix-go)](https://github.com/imgix/imgix-go/blob/master/LICENSE)
 
-[![Build Status](https://travis-ci.org/parkr/imgix-go.svg?branch=master)](https://travis-ci.org/parkr/imgix-go)
+---
+<!-- /ix-docs-ignore -->
 
 ## Installation
-
-It's a go package. Do this in your terminal:
 
 ```bash
 go get github.com/imgix/imgix-go
@@ -31,10 +33,8 @@ import (
 func main() {
     client := imgix.NewClient("mycompany.imgix.net")
 
-    // Nothing fancy.
     fmt.Println(client.Path("/myImage.jpg"))
 
-    // Throw some params in there!
     fmt.Println(client.PathWithParams("/myImage.jpg", url.Values{
         "w": []string{"400"},
         "h": []string{"400"},
