@@ -11,6 +11,9 @@
 ---
 <!-- /ix-docs-ignore -->
 
+- [Installation](#installation)
+- [Usage](#usage)
+
 ## Installation
 
 ```bash
@@ -18,8 +21,6 @@ go get github.com/imgix/imgix-go
 ```
 
 ## Usage
-
-Something like this:
 
 ```go
 package main
@@ -41,5 +42,3 @@ func main() {
     }))
 }
 ```
-
-That's it at a basic level. More fun features though!
