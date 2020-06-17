@@ -286,6 +286,11 @@ func isNotCustom(begin int, end int, tol float64) bool {
 	return defaultBegin && defaultEnd && defaultTol
 }
 
+func (b *Builder) CreateSrcSetFromRange(path string, params url.Values, begin int, end int, tol float64) string {
+	targets := TargetWidths(begin, end, tol)
+	return b.buildSrcSetPairs(path, params, targets)
+}
+
 // CreateSrcSetFromWidths takes a path, a set of params, and an array of widths
 // to create a srcset attribute with width-described URLs (image candidate strings).
 func (b *Builder) CreateSrcSetFromWidths(path string, params url.Values, widths []int) string {
@@ -303,7 +308,7 @@ func (b *Builder) buildSrcSetPairs(path string, params url.Values, targets []int
 		entry := b.createImageCandidateString(path, params, widthValue+"w")
 		srcSetEntries = append(srcSetEntries, entry)
 	}
-	return strings.Join(srcSetEntries, "\n")
+	return strings.Join(srcSetEntries, ",\n")
 }
 
 func (b *Builder) buildSrcSetDpr(path string, params url.Values, disableVariableQuality bool) string {
@@ -328,7 +333,7 @@ func (b *Builder) buildSrcSetDpr(path string, params url.Values, disableVariable
 		entry := b.createImageCandidateString(path, params, ratio+"x")
 		srcSetEntries = append(srcSetEntries, entry)
 	}
-	return strings.Join(srcSetEntries, "\n")
+	return strings.Join(srcSetEntries, ",\n")
 }
 
 // createImageCandidateString joins a URL with a space and a suffix in order

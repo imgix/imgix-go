@@ -122,9 +122,25 @@ func TestClientHostsCountValidation(t *testing.T) {
 func TestBuilder_CreateSrcSetFromWidths(t *testing.T) {
 	c := testClient()
 	actual := c.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
-	expected := "https://test.imgix.net/image.jpg?w=100 100w\n" +
-		"https://test.imgix.net/image.jpg?w=200 200w\n" +
-		"https://test.imgix.net/image.jpg?w=300 300w\n" +
+	expected := "https://test.imgix.net/image.jpg?w=100 100w,\n" +
+		"https://test.imgix.net/image.jpg?w=200 200w,\n" +
+		"https://test.imgix.net/image.jpg?w=300 300w,\n" +
 		"https://test.imgix.net/image.jpg?w=400 400w"
+	assert.Equal(t, expected, actual)
+}
+
+func TestBuilder_CreateSrcSetFromRange(t *testing.T) {
+	c := testClient()
+	actual := c.CreateSrcSetFromRange("image.png", url.Values{}, 100, 380, 0.08)
+	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
+		"https://test.imgix.net/image.png?w=116 116w,\n" +
+		"https://test.imgix.net/image.png?w=135 135w,\n" +
+		"https://test.imgix.net/image.png?w=156 156w,\n" +
+		"https://test.imgix.net/image.png?w=181 181w,\n" +
+		"https://test.imgix.net/image.png?w=210 210w,\n" +
+		"https://test.imgix.net/image.png?w=244 244w,\n" +
+		"https://test.imgix.net/image.png?w=283 283w,\n" +
+		"https://test.imgix.net/image.png?w=328 328w,\n" +
+		"https://test.imgix.net/image.png?w=380 380w"
 	assert.Equal(t, expected, actual)
 }
