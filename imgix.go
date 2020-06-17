@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 )
@@ -283,4 +284,79 @@ func isNotCustom(begin int, end int, tol float64) bool {
 	defaultEnd := end == MaxWidth
 	defaultTol := tol == Tolerance
 	return defaultBegin && defaultEnd && defaultTol
+}
+
+// CreateSrcSetFromWidths takes a path, a set of params, and an array of widths
+// to create a srcset attribute with width-described URLs (image candidate strings).
+func (b *Builder) CreateSrcSetFromWidths(path string, params url.Values, widths []int) string {
+	return b.buildSrcSetPairs(path, params, widths)
+}
+
+// buildSrcSetPairs builds a srcset attribute string containing width-described
+// image candidate strings.
+func (b *Builder) buildSrcSetPairs(path string, params url.Values, targets []int) string {
+	var srcSetEntries []string
+
+	for _, w := range targets {
+		widthValue := strconv.Itoa(w)
+		params.Set("w", widthValue)
+		entry := b.createImageCandidateString(path, params, widthValue+"w")
+		srcSetEntries = append(srcSetEntries, entry)
+	}
+	return strings.Join(srcSetEntries, "\n")
+}
+
+func (b *Builder) buildSrcSetDpr(path string, params url.Values, disableVariableQuality bool) string {
+	var DprRatios = map[int]int{1: 75, 2: 50, 3: 35, 4: 23, 5: 20}
+	var srcSetEntries []string
+
+	for dprRatio, dprQuality := range DprRatios {
+		ratio := strconv.Itoa(dprRatio)
+		params.Set("dpr", ratio)
+
+
+		// If variable quality has not been disabled,
+		// attempt to get the "q" param. If the "q"
+		// param is not found in the params, then an
+		// empty string will be returned. In this case,
+		// set the "q" params' value to be dprQuality
+		if !disableVariableQuality {
+			qParam := params.Get("q")
+			if qParam == "" {
+				params.Set("q", strconv.Itoa(dprQuality))
+			}
+		}
+		entry := b.createImageCandidateString(path, params, ratio+"x")
+		srcSetEntries = append(srcSetEntries, entry)
+	}
+	return strings.Join(srcSetEntries, "\n")
+}
+
+// createImageCandidateString joins a URL with a space and a suffix in order
+// to create an image candidate string. For more information see:
+// https://html.spec.whatwg.org/multipage/images.html#srcset-attributes
+func (b *Builder) createImageCandidateString(path string, params url.Values, suffix string) string {
+	return strings.Join([]string{b.CreateURL(path, params), " ", suffix}, "")
+}
+
+// isDprBased determines if we can infer from params whether we need
+// to create a dpr-based srcset attribute. If a width ("w") is present
+// or if both the height ("h") and the aspect ratio ("ar") are present,
+// then we can infer the desired srcset is dpr-based.
+func (b *Builder) isDprBased(params url.Values) bool {
+	const EmptyStr = ""
+	hasWidth := params.Get("w")
+	hasHeight := params.Get("h")
+	hasAspectRatio := params.Get("ar")
+
+	if hasWidth != EmptyStr {
+		return true
+	}
+
+	if hasHeight != EmptyStr && hasAspectRatio != EmptyStr {
+		return true
+	}
+	// Getting "w", "h", and "ar" returned empty strings so none are
+	// present in the params, this is _not_ a dpr-based srcset.
+	return false
 }

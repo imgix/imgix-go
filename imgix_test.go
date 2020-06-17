@@ -118,3 +118,13 @@ func TestClientHostsCountValidation(t *testing.T) {
 	c.domain = string("")
 	c.Domain()
 }
+
+func TestCreateSrcSetWidths(t *testing.T) {
+	c := testClient()
+	actual := c.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
+	expected := "https://prod.imgix.net/image.jpg?w=100 100w\n" +
+		"https://prod.imgix.net/image.jpg?w=200 200w\n" +
+		"https://prod.imgix.net/image.jpg?w=300 300w\n" +
+		"https://prod.imgix.net/image.jpg?w=400 400w"
+	assert.Equal(t, expected, actual)
+}
