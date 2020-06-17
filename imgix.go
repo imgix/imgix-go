@@ -314,7 +314,6 @@ func (b *Builder) buildSrcSetDpr(path string, params url.Values, disableVariable
 		ratio := strconv.Itoa(dprRatio)
 		params.Set("dpr", ratio)
 
-
 		// If variable quality has not been disabled,
 		// attempt to get the "q" param. If the "q"
 		// param is not found in the params, then an

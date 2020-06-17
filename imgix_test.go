@@ -9,7 +9,7 @@ import (
 
 // TODO: Idiomatic testing.
 func testClient() Builder {
-	return NewBuilder("prod.imgix.net")
+	return NewBuilder("test.imgix.net")
 }
 
 func testClientWithToken() Builder {
@@ -18,13 +18,13 @@ func testClientWithToken() Builder {
 
 func TestBasicClientPath(t *testing.T) {
 	c := testClient()
-	assert.Equal(t, "https://prod.imgix.net/1/users.jpg", c.CreateURLFromPath("/1/users.jpg"))
+	assert.Equal(t, "https://test.imgix.net/1/users.jpg", c.CreateURLFromPath("/1/users.jpg"))
 }
 
 func TestClientPathWithParams(t *testing.T) {
 	c := testClient()
 	params := url.Values{"w": []string{"200"}, "h": []string{"400"}}
-	assert.Equal(t, "https://prod.imgix.net/1/users.jpg?h=400&w=200", c.CreateURL("/1/users.jpg", params))
+	assert.Equal(t, "https://test.imgix.net/1/users.jpg?h=400&w=200", c.CreateURL("/1/users.jpg", params))
 }
 
 func TestClientScheme(t *testing.T) {
@@ -38,42 +38,42 @@ func TestClientScheme(t *testing.T) {
 func TestClientPath(t *testing.T) {
 	c := testClient()
 	u := c.CreateURLFromPath("/jax.jpg")
-	assert.Equal(t, "https://prod.imgix.net/jax.jpg", u)
+	assert.Equal(t, "https://test.imgix.net/jax.jpg", u)
 }
 
 func TestClientPathWithOneParam(t *testing.T) {
 	c := testClient()
 	params := url.Values{"w": []string{"400"}}
 	u := c.CreateURL("/jax.jpg", params)
-	assert.Equal(t, "https://prod.imgix.net/jax.jpg?w=400", u)
+	assert.Equal(t, "https://test.imgix.net/jax.jpg?w=400", u)
 }
 
 func TestClientPathWithTwoParams(t *testing.T) {
 	c := testClient()
 	params := url.Values{"w": []string{"400"}, "h": []string{"300"}}
 	u := c.CreateURL("/jax.jpg", params)
-	assert.Equal(t, "https://prod.imgix.net/jax.jpg?h=300&w=400", u)
+	assert.Equal(t, "https://test.imgix.net/jax.jpg?h=300&w=400", u)
 }
 
 func TestClientPathWithParamsEncodesParamKeys(t *testing.T) {
 	c := testClient()
 	params := url.Values{"hello world": []string{"interesting"}}
 	u := c.CreateURL("/demo.png", params)
-	assert.Equal(t, "https://prod.imgix.net/demo.png?hello%%20world=interesting", u)
+	assert.Equal(t, "https://test.imgix.net/demo.png?hello%%20world=interesting", u)
 }
 
 func TestClientPathWithParamsEncodesParamValues(t *testing.T) {
 	c := testClient()
 	params := url.Values{"hello_world": []string{"/foo\"> <script>alert(\"hacked\")</script><"}}
 	u := c.CreateURL("/demo.png", params)
-	assert.Equal(t, "https://prod.imgix.net/demo.png?hello_world=%2Ffoo%22%3E%%20%3Cscript%3Ealert%28%22hacked%22%29%3C%2Fscript%3E%3C", u)
+	assert.Equal(t, "https://test.imgix.net/demo.png?hello_world=%2Ffoo%22%3E%%20%3Cscript%3Ealert%28%22hacked%22%29%3C%2Fscript%3E%3C", u)
 }
 
 func TestClientPathWithParamsEncodesBase64ParamVariants(t *testing.T) {
 	c := testClient()
 	params := url.Values{"txt64": []string{"I cannøt belîév∑ it wors! 😱"}}
 	u := c.CreateURL("~text", params)
-	assert.Equal(t, "https://prod.imgix.net/~text?txt64=SSBjYW5uw7h0IGJlbMOuw6l24oiRIGl0IHdvcu-jv3MhIPCfmLE", u)
+	assert.Equal(t, "https://test.imgix.net/~text?txt64=SSBjYW5uw7h0IGJlbMOuw6l24oiRIGl0IHdvcu-jv3MhIPCfmLE", u)
 }
 
 func TestClientPathWithSignature(t *testing.T) {
@@ -119,12 +119,12 @@ func TestClientHostsCountValidation(t *testing.T) {
 	c.Domain()
 }
 
-func TestCreateSrcSetWidths(t *testing.T) {
+func TestBuilder_CreateSrcSetFromWidths(t *testing.T) {
 	c := testClient()
 	actual := c.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
-	expected := "https://prod.imgix.net/image.jpg?w=100 100w\n" +
-		"https://prod.imgix.net/image.jpg?w=200 200w\n" +
-		"https://prod.imgix.net/image.jpg?w=300 300w\n" +
-		"https://prod.imgix.net/image.jpg?w=400 400w"
+	expected := "https://test.imgix.net/image.jpg?w=100 100w\n" +
+		"https://test.imgix.net/image.jpg?w=200 200w\n" +
+		"https://test.imgix.net/image.jpg?w=300 300w\n" +
+		"https://test.imgix.net/image.jpg?w=400 400w"
 	assert.Equal(t, expected, actual)
 }
