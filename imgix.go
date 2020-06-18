@@ -286,6 +286,12 @@ func isNotCustom(begin int, end int, tol float64) bool {
 	return defaultBegin && defaultEnd && defaultTol
 }
 
+// CreateSrcSetFromRange creates a srcset attribute whose URLs
+// are described by the widths within the specified range. The
+// range is defined by begin, end, and tol (tolerance). The range
+// begins at the minimum value and ends at the maximal value; the
+// tol or tolerance dictates the amount of tolerable image width
+// variation between each width in the range.
 func (b *Builder) CreateSrcSetFromRange(path string, params url.Values, begin int, end int, tol float64) string {
 	targets := TargetWidths(begin, end, tol)
 	return b.buildSrcSetPairs(path, params, targets)
