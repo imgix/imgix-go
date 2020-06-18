@@ -269,7 +269,7 @@ func TargetWidths(begin int, end int, tol float64) []int {
 	// If we make it here, the lengthOfResolutions is greater
 	// than or equal to 2, so accessing the last element of
 	// the slice should not panic.
-	if resolutions[lengthOfResolutions-1] < end {
+	if resolutions != nil && resolutions[lengthOfResolutions-1] < end {
 		resolutions = append(resolutions, end)
 	}
 	return resolutions
