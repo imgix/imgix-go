@@ -8,12 +8,12 @@ import (
 )
 
 // TODO: Idiomatic testing.
-func testClient() Builder {
-	return NewBuilder("test.imgix.net")
+func testClient() URLBuilder {
+	return NewURLBuilder("test.imgix.net")
 }
 
-func testClientWithToken() Builder {
-	return NewBuilderWithToken("my-social-network.imgix.net", "FOO123bar")
+func testClientWithToken() URLBuilder {
+	return NewURLBuilderWithToken("my-social-network.imgix.net", "FOO123bar")
 }
 
 func TestBasicClientPath(t *testing.T) {
@@ -119,7 +119,7 @@ func TestClientHostsCountValidation(t *testing.T) {
 	c.Domain()
 }
 
-func TestBuilder_CreateSrcSetFromWidths(t *testing.T) {
+func TestURLBuilder_CreateSrcSetFromWidths(t *testing.T) {
 	c := testClient()
 	actual := c.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
 	expected := "https://test.imgix.net/image.jpg?w=100 100w,\n" +
@@ -129,9 +129,11 @@ func TestBuilder_CreateSrcSetFromWidths(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestBuilder_CreateSrcSetFromRange(t *testing.T) {
+func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 	c := testClient()
-	actual := c.CreateSrcSetFromRange("image.png", url.Values{}, 100, 380, 0.08)
+	// For demonstration, the below is a longer version of the actual call:
+	// c.CreateSrcSetFromRange("image.png", url.Values{}, WidthRange{begin: 100, end: 380, tol: 0.08})
+	actual := c.CreateSrcSetFromRange("image.png", url.Values{}, WidthRange{100, 380, 0.08})
 	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
 		"https://test.imgix.net/image.png?w=116 116w,\n" +
 		"https://test.imgix.net/image.png?w=135 135w,\n" +
@@ -145,11 +147,64 @@ func TestBuilder_CreateSrcSetFromRange(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func TestURLBuilder_CreateSrcSetFixedW(t *testing.T) {
+	c := testClient()
+	params := url.Values{"w": []string{"320"}}
+	config := SrcSetConfig{disableVariableQuality: false}
+	expected := "https://test.imgix.net/image.png?dpr=1&q=75&w=320 1x,\n" +
+		"https://test.imgix.net/image.png?dpr=2&q=50&w=320 2x,\n" +
+		"https://test.imgix.net/image.png?dpr=3&q=35&w=320 3x,\n" +
+		"https://test.imgix.net/image.png?dpr=4&q=23&w=320 4x,\n" +
+		"https://test.imgix.net/image.png?dpr=5&q=20&w=320 5x"
+	actual := c.CreateSrcSet("image.png", params, config)
+	assert.Equal(t, expected, actual)
+}
+
+func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
+	c := testClient()
+	params := url.Values{"h": []string{"320"}, "ar": []string{"4:3"}}
+	config := SrcSetConfig{disableVariableQuality: false}
+	// TODO: it would appear that go's `url.Values` does aggressively
+	// alphabetize query parameters...
+	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=320&q=75 1x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=320&q=50 2x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=320&q=35 3x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=320&q=23 4x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=320&q=20 5x"
+	actual := c.CreateSrcSet("image.png", params, config)
+	assert.Equal(t, expected, actual)
+}
+
+func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
+	c := testClient()
+	wr := WidthRange{100, 8192, 1000.0}
+	config := SrcSetConfig{widthRange: wr}
+
+	expected := "https://test.imgix.net/image.png?w=100 100w,\n"+
+		"https://test.imgix.net/image.png?w=8192 8192w"
+
+	actual := c.CreateSrcSet("image.png", url.Values{}, config)
+	assert.Equal(t, expected, actual)
+}
+
+func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
+	c := testClient()
+	wr := WidthRange{100, 108, 0.02}
+	config := SrcSetConfig{widthRange: wr}
+
+	expected := "https://test.imgix.net/image.png?w=100 100w,\n"+
+		"https://test.imgix.net/image.png?w=104 104w,\n"+
+		"https://test.imgix.net/image.png?w=108 108w"
+
+	actual := c.CreateSrcSet("image.png", url.Values{}, config)
+	assert.Equal(t, expected, actual)
+}
+
 func TestValidators_validateNegativeWidths(t *testing.T) {
 	widths := []int{100, 200, 300, -400, -500}
 	validWidths, err := validateWidths(widths)
 
-	// Check that an error occurred and that `err` is `NotEqual` to nil.
+	// Ensure an error occurred, and the `err` is `NotEqual` to `nil`.
 	assert.NotEqual(t, nil, err)
 	assert.Equal(t, []int{}, validWidths)
 }
@@ -158,9 +213,9 @@ func TestValidators_validatePositiveWidths(t *testing.T) {
 	expected := []int{101, 202, 303, 404, 505}
 	validWidths, err := validateWidths(expected)
 
-	// Check that the `err` is nil.
+	// Check the `err` is nil.
 	assert.Equal(t, nil, err)
-	// Check that the expected widths are valid widths.
+	// Check the expected widths are valid widths.
 	assert.Equal(t, expected, validWidths)
 }
 
