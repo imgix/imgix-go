@@ -1,9 +1,13 @@
 package imgix
 
 import (
+	"log"
 	"net/url"
+	"os"
+	"strings"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -180,7 +184,7 @@ func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
 	wr := WidthRange{100, 8192, 1000.0}
 	config := SrcSetConfig{widthRange: wr}
 
-	expected := "https://test.imgix.net/image.png?w=100 100w,\n"+
+	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
 		"https://test.imgix.net/image.png?w=8192 8192w"
 
 	actual := c.CreateSrcSet("image.png", url.Values{}, config)
@@ -192,8 +196,8 @@ func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 	wr := WidthRange{100, 108, 0.02}
 	config := SrcSetConfig{widthRange: wr}
 
-	expected := "https://test.imgix.net/image.png?w=100 100w,\n"+
-		"https://test.imgix.net/image.png?w=104 104w,\n"+
+	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
+		"https://test.imgix.net/image.png?w=104 104w,\n" +
 		"https://test.imgix.net/image.png?w=108 108w"
 
 	actual := c.CreateSrcSet("image.png", url.Values{}, config)
@@ -272,4 +276,64 @@ func TestValidators_validateRangeWithToleranceValid(t *testing.T) {
 	invalidTolerance := 1.25
 	_, err := validateRangeWithTolerance(100, 200, invalidTolerance)
 	assert.Equal(t, nil, err)
+}
+
+func TestReadMe_basicURLUsage(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	expected := "https://demo.imgix.net/path/to/image.jpg"
+	actual := ub.CreateURL("path/to/image.jpg", url.Values{})
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_basicURLUsageHandW100(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	expected := "https://demo.imgix.net/path/to/image.jpg?h=100&w=100"
+	actual := ub.CreateURL("path/to/image.jpg", url.Values{"h": []string{"100"}, "w": []string{"100"}})
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_basicURLUsageUsingHttp(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	// Set the UseHttps field to false to begin using HTTP.
+	ub.SetUseHTTPS(false)
+
+	expected := "http://demo.imgix.net/path/to/image.jpg"
+	actual := ub.CreateURL("path/to/image.jpg", url.Values{})
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_basicURLUsageSigningWithToken(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	ixToken := os.Getenv("IX_TOKEN")
+	ub := NewURLBuilderWithToken("demo.imgix.net", ixToken)
+
+	expected := "https://demo.imgix.net/path/to/image.jpg?s=c8bd1807209f7f1d96dd7123f92febb4"
+	actual := ub.CreateSignedURL("path/to/image.jpg", url.Values{})
+	assert.Equal(t, expected, actual)
+}
+
+// TODO: Think harder about how signing occurs.
+func TestReadMe_SignedSrcSetCreation(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	ixToken := os.Getenv("IX_TOKEN")
+	ub := NewURLBuilderWithToken("demos.imgix.net", ixToken)
+	srcset := ub.CreateSrcSet("image.png", url.Values{}, DefaultConfig)
+
+	expectedLength := 31
+	splitSrcSet := strings.Split(srcset, ",\n")
+
+	for _, u := range splitSrcSet {
+		assert.Contains(t, u, "s=")
+	}
+
+	actualLength := len(splitSrcSet)
+	assert.Equal(t, expectedLength, actualLength)
 }

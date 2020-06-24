@@ -67,6 +67,9 @@ func (b *URLBuilder) SetToken(token string) {
 // CreateURL creates a URL string given a path and a set of
 // params.
 func (b *URLBuilder) CreateURL(path string, params url.Values) string {
+	if b.token != "" {
+		return b.createAndMaybeSignURL(path, params, true)
+	}
 	return b.createAndMaybeSignURL(path, params, false)
 }
 
@@ -142,7 +145,9 @@ func (b *URLBuilder) signPathAndParams(path string, params url.Values) string {
 // strings into a signatureBase. Next, create a hashedSig and write the
 // signatureBase into it. Finally, return the encoded, signed string.
 func createMd5Signature(token string, path string, params string) string {
-	signatureBase := strings.Join([]string{token, path, params}, "")
+	// TODO: survey the kit for sig bases.
+	var delim string
+	signatureBase := strings.Join([]string{token, path, delim, params}, "")
 	hashedSig := md5.New()
 	hashedSig.Write([]byte(signatureBase))
 	return hex.EncodeToString(hashedSig.Sum(nil))
@@ -313,6 +318,11 @@ type SrcSetConfig struct {
 	disableVariableQuality bool
 }
 
+var DefaultConfig = SrcSetConfig{
+	widthRange:             WidthRange{begin: minWidth, end: maxWidth, tol: tolerance},
+	disableVariableQuality: false,
+}
+
 // CreateSrcSetFromRange creates a srcset attribute whose URLs
 // are described by the widths within the specified range. begin,
 // end, and tol (tolerance) define the widths-range. The range
@@ -417,7 +427,7 @@ type rangePair struct {
 	end   int
 }
 
-// Todo: Review this regex and the one that follows.
+// Todo: Review this regex, and the one that follows.
 // Matches http:// and https://
 var RegexpHTTPAndS = regexp.MustCompile("https?://")
 
