@@ -73,6 +73,42 @@ func (b *URLBuilder) CreateURL(path string, params url.Values) string {
 	return b.createAndMaybeSignURL(path, params, false)
 }
 
+// CreateSrcSet creates a srcset attribute string. Given a path, set of
+// parameters, and a Config, this function infers which kind of srcset
+// attribute to create.
+//
+// If the params contain a width parameter or both
+// height and aspect ratio parameters, a fixed-width srcset attribute
+// will be created. This fixed-width srcset attribute will be dpr-based
+// and have variable quality turned on by default. Variable quality can
+// be disabled by setting the disableVariableQuality field of the
+// SrcSetOpts to true.
+//
+// Otherwise, this function will create a fluid-width srcset attribute
+// wherein each URL (or image candidate string) is described by a width
+// in the specified WidthRange.
+func (b *URLBuilder) CreateSrcSet(path string, params url.Values, opts SrcSetOpts) string {
+	// Check params contains a width (w) or height (h) _and_ aspect ratio (ar);
+	hasWidth := params.Get("w") != ""
+	hasHeight := params.Get("h") != ""
+	hasAspectRatio := params.Get("ar") != ""
+
+	// If params has either a width or _both_ height and aspect ratio,
+	// build a dpr-based srcset attribute.
+	if hasWidth || (hasHeight && hasAspectRatio) {
+		return b.buildSrcSetDpr(path, params, opts.disableVariableQuality)
+	}
+
+	// Otherwise, get the widthRange values from the config and build a
+	// width-pairs based srcset attribute.
+	begin := opts.widthRange.begin
+	end := opts.widthRange.end
+	tol := opts.widthRange.tol
+	targets := TargetWidths(begin, end, tol)
+	return b.buildSrcSetPairs(path, params, targets)
+}
+
+// *********************************************************************
 // CreateSignedURL is like CreateURL except that it creates a signed URL.
 func (b *URLBuilder) CreateSignedURL(path string, params url.Values) string {
 	return b.createAndMaybeSignURL(path, params, true)
@@ -88,6 +124,8 @@ func (b *URLBuilder) CreateURLFromPath(path string) string {
 func (b *URLBuilder) CreateSignedURLFromPath(path string) string {
 	return b.createAndMaybeSignURL(path, url.Values{}, true)
 }
+
+// *********************************************************************
 
 // createURLFromPathAndParams will manually build a URL from a given path string and
 // parameters passed in. Because of the differences in how net/url escapes
@@ -276,52 +314,23 @@ func isNotCustom(begin int, end int, tol float64) bool {
 	return defaultBegin && defaultEnd && defaultTol
 }
 
-// CreateSrcSet creates a srcset attribute string. Given a path, set of
-// parameters, and a Config, this function infers which kind of srcset
-// attribute to create.
-//
-// If the params contain a width parameter or both
-// height and aspect ratio parameters, a fixed-width srcset attribute
-// will be created. This fixed-width srcset attribute will be dpr-based
-// and have variable quality turned on by default. Variable quality can
-// be disabled by setting the disableVariableQuality field of the
-// SrcSetConfig to true.
-//
-// Otherwise, this function will create a fluid-width srcset attribute
-// wherein each URL (or image candidate string) is described by a width
-// in the specified WidthRange.
-func (b *URLBuilder) CreateSrcSet(path string, params url.Values, config SrcSetConfig) string {
-	// Check params contains a width (w) or height (h) _and_ aspect ratio (ar);
-	hasWidth := params.Get("w") != ""
-	hasHeight := params.Get("h") != ""
-	hasAspectRatio := params.Get("ar") != ""
-
-	// If params has either a width or _both_ height and aspect ratio,
-	// build a dpr-based srcset attribute.
-	if hasWidth || (hasHeight && hasAspectRatio) {
-		return b.buildSrcSetDpr(path, params, config.disableVariableQuality)
-	}
-
-	// Otherwise, get the widthRange values from the config and build a
-	// width-pairs based srcset attribute.
-	begin := config.widthRange.begin
-	end := config.widthRange.end
-	tol := config.widthRange.tol
-	targets := TargetWidths(begin, end, tol)
-	return b.buildSrcSetPairs(path, params, targets)
-}
-
-// SrcSetConfig structures together configuration options for creating
+// SrcSetOpts structures together configuration options for creating
 // srcset attributes.
-type SrcSetConfig struct {
+type SrcSetOpts struct {
 	widthRange             WidthRange
 	disableVariableQuality bool
 }
 
-var DefaultConfig = SrcSetConfig{
+// DefaultOpts structures default srcset options together. Where a default,
+// fixed-width (dpr-based) srcset will have variable quality enabled and a
+// fluid-width-based (width-paris) srcset will begin at 100, end at 8192
+// and have a tolerance of 0.08 (or 8%).
+var DefaultOpts = SrcSetOpts{
 	widthRange:             WidthRange{begin: minWidth, end: maxWidth, tol: tolerance},
 	disableVariableQuality: false,
 }
+
+// *********************************************************************
 
 // CreateSrcSetFromRange creates a srcset attribute whose URLs
 // are described by the widths within the specified range. begin,
@@ -339,6 +348,8 @@ func (b *URLBuilder) CreateSrcSetFromRange(path string, params url.Values, wr Wi
 func (b *URLBuilder) CreateSrcSetFromWidths(path string, params url.Values, widths []int) string {
 	return b.buildSrcSetPairs(path, params, widths)
 }
+
+// *********************************************************************
 
 // buildSrcSetPairs builds a srcset attribute string containing width-described
 // image candidate strings.
@@ -367,13 +378,17 @@ func (b *URLBuilder) buildSrcSetDpr(path string, params url.Values, disableVaria
 		params.Set("dpr", ratio)
 		dprQuality := DprQualities[ratio]
 
+		// If variable quality is disabled, then first try to get
+		// any `q` param
 		if disableVariableQuality {
-			qParam := params.Get("q")
-			if qParam == "" {
-				params.Set("q", dprQuality)
+			qValue := params.Get("q")
+			if qValue != "" {
+				params.Set("q", qValue)
 			}
+		} else {
+			params.Set("q", dprQuality)
 		}
-		params.Set("q", dprQuality)
+
 		entry := b.createImageCandidateString(path, params, ratio+"x")
 		srcSetEntries = append(srcSetEntries, entry)
 	}
@@ -422,6 +437,8 @@ type WidthRange struct {
 	tol   float64
 }
 
+// rangePair is a convenience structure used during validation.
+// Its purpose is create a consistent interface for our validators.
 type rangePair struct {
 	begin int
 	end   int

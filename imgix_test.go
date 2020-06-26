@@ -154,20 +154,20 @@ func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 func TestURLBuilder_CreateSrcSetFixedW(t *testing.T) {
 	c := testClient()
 	params := url.Values{"w": []string{"320"}}
-	config := SrcSetConfig{disableVariableQuality: false}
+	options := SrcSetOpts{disableVariableQuality: false}
 	expected := "https://test.imgix.net/image.png?dpr=1&q=75&w=320 1x,\n" +
 		"https://test.imgix.net/image.png?dpr=2&q=50&w=320 2x,\n" +
 		"https://test.imgix.net/image.png?dpr=3&q=35&w=320 3x,\n" +
 		"https://test.imgix.net/image.png?dpr=4&q=23&w=320 4x,\n" +
 		"https://test.imgix.net/image.png?dpr=5&q=20&w=320 5x"
-	actual := c.CreateSrcSet("image.png", params, config)
+	actual := c.CreateSrcSet("image.png", params, options)
 	assert.Equal(t, expected, actual)
 }
 
 func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 	c := testClient()
 	params := url.Values{"h": []string{"320"}, "ar": []string{"4:3"}}
-	config := SrcSetConfig{disableVariableQuality: false}
+	options := SrcSetOpts{disableVariableQuality: false}
 	// TODO: it would appear that go's `url.Values` does aggressively
 	// alphabetize query parameters...
 	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=320&q=75 1x,\n" +
@@ -175,32 +175,45 @@ func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=320&q=35 3x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=320&q=23 4x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=320&q=20 5x"
-	actual := c.CreateSrcSet("image.png", params, config)
+	actual := c.CreateSrcSet("image.png", params, options)
 	assert.Equal(t, expected, actual)
 }
 
 func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
 	c := testClient()
 	wr := WidthRange{100, 8192, 1000.0}
-	config := SrcSetConfig{widthRange: wr}
+	options := SrcSetOpts{widthRange: wr}
 
 	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
 		"https://test.imgix.net/image.png?w=8192 8192w"
 
-	actual := c.CreateSrcSet("image.png", url.Values{}, config)
+	actual := c.CreateSrcSet("image.png", url.Values{}, options)
 	assert.Equal(t, expected, actual)
 }
 
 func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 	c := testClient()
 	wr := WidthRange{100, 108, 0.02}
-	config := SrcSetConfig{widthRange: wr}
+	config := SrcSetOpts{widthRange: wr}
 
 	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
 		"https://test.imgix.net/image.png?w=104 104w,\n" +
 		"https://test.imgix.net/image.png?w=108 108w"
 
 	actual := c.CreateSrcSet("image.png", url.Values{}, config)
+	assert.Equal(t, expected, actual)
+}
+
+func TestURLBuilder_CreateSrcSetQoverridesDisableVarQuality(t *testing.T) {
+	c := testClient()
+	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}, "q": []string{"99"}}
+	options := SrcSetOpts{disableVariableQuality: true}
+	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=99 1x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=800&q=99 2x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=800&q=99 3x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=99 4x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=99 5x"
+	actual := c.CreateSrcSet("image.png", params, options)
 	assert.Equal(t, expected, actual)
 }
 
@@ -325,7 +338,7 @@ func TestReadMe_SignedSrcSetCreation(t *testing.T) {
 
 	ixToken := os.Getenv("IX_TOKEN")
 	ub := NewURLBuilderWithToken("demos.imgix.net", ixToken)
-	srcset := ub.CreateSrcSet("image.png", url.Values{}, DefaultConfig)
+	srcset := ub.CreateSrcSet("image.png", url.Values{}, DefaultOpts)
 
 	expectedLength := 31
 	splitSrcSet := strings.Split(srcset, ",\n")
@@ -336,4 +349,106 @@ func TestReadMe_SignedSrcSetCreation(t *testing.T) {
 
 	actualLength := len(splitSrcSet)
 	assert.Equal(t, expectedLength, actualLength)
+}
+
+func TestReadMe_FixedWidthSrcSetDefault(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}}
+	options := SrcSetOpts{disableVariableQuality: false}
+	expected := "https://demo.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=75 1x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=2&h=800&q=50 2x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=3&h=800&q=35 3x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=23 4x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=20 5x"
+	actual := ub.CreateSrcSet("image.png", params, options)
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_FixedWidthSrcSetVariableQualityDisabled(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}}
+	options := SrcSetOpts{disableVariableQuality: true}
+	expected := "https://demo.imgix.net/image.png?ar=4%3A3&dpr=1&h=800 1x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=2&h=800 2x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=3&h=800 3x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=4&h=800 4x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=5&h=800 5x"
+	actual := ub.CreateSrcSet("image.png", params, options)
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_FixedWidthSrcSetNoOpts(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}}
+	expected := "https://demo.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=75 1x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=2&h=800&q=50 2x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=3&h=800&q=35 3x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=23 4x,\n" +
+		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=20 5x"
+	actual := ub.CreateSrcSet("image.png", params, SrcSetOpts{})
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_FluidWidthSrcSetFromWidths(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	actual := ub.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
+	expected := "https://demo.imgix.net/image.jpg?w=100 100w,\n" +
+		"https://demo.imgix.net/image.jpg?w=200 200w,\n" +
+		"https://demo.imgix.net/image.jpg?w=300 300w,\n" +
+		"https://demo.imgix.net/image.jpg?w=400 400w"
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_FluidWidthSrcSetFromSrcSetOpts(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	options := SrcSetOpts{widthRange: WidthRange{begin: 100, end: 380, tol: 0.08}}
+	actual := ub.CreateSrcSet("image.png", url.Values{}, options)
+	expected := "https://demo.imgix.net/image.png?w=100 100w,\n" +
+		"https://demo.imgix.net/image.png?w=116 116w,\n" +
+		"https://demo.imgix.net/image.png?w=135 135w,\n" +
+		"https://demo.imgix.net/image.png?w=156 156w,\n" +
+		"https://demo.imgix.net/image.png?w=181 181w,\n" +
+		"https://demo.imgix.net/image.png?w=210 210w,\n" +
+		"https://demo.imgix.net/image.png?w=244 244w,\n" +
+		"https://demo.imgix.net/image.png?w=283 283w,\n" +
+		"https://demo.imgix.net/image.png?w=328 328w,\n" +
+		"https://demo.imgix.net/image.png?w=380 380w"
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_FluidWidthSrcSetFromSrcSetOptsTol20(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net")
+	options := SrcSetOpts{widthRange: WidthRange{begin: 100, end: 384, tol: 0.20}}
+	actual := ub.CreateSrcSet("image.png", url.Values{}, options)
+	expected := "https://demo.imgix.net/image.png?w=100 100w,\n" +
+		"https://demo.imgix.net/image.png?w=140 140w,\n" +
+		"https://demo.imgix.net/image.png?w=196 196w,\n" +
+		"https://demo.imgix.net/image.png?w=274 274w,\n" +
+		"https://demo.imgix.net/image.png?w=384 384w"
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_TargetWidths(t *testing.T) {
+	expected := []int{300, 378, 476, 600, 756, 953, 1200, 1513, 1906, 2401, 3000}
+	actual := TargetWidths(300, 3000, 0.13)
+	assert.Equal(t, expected, actual)
+
+	sm := expected[:3]
+	expectedSm := []int{300, 378, 476}
+	assert.Equal(t, expectedSm, sm)
+
+	md := expected[3:7]
+	expectedMd := []int{600, 756, 953, 1200}
+	assert.Equal(t, expectedMd, md)
+
+	lg := expected[7:]
+	expectedLg := []int{1513, 1906, 2401, 3000}
+	assert.Equal(t, expectedLg, lg)
+
+	ub := NewURLBuilder("demos.imgix.net")
+	srcset := ub.CreateSrcSetFromWidths("image.png", url.Values{}, sm)
+	actualSrcset := "https://demos.imgix.net/image.png?w=300 300w,\n" +
+		"https://demos.imgix.net/image.png?w=378 378w,\n" +
+		"https://demos.imgix.net/image.png?w=476 476w"
+	assert.Equal(t, actualSrcset, srcset)
 }
