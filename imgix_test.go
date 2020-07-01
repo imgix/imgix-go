@@ -63,14 +63,14 @@ func TestClientPathWithParamsEncodesParamKeys(t *testing.T) {
 	c := testClient()
 	params := url.Values{"hello world": []string{"interesting"}}
 	u := c.CreateURL("/demo.png", params)
-	assert.Equal(t, "https://test.imgix.net/demo.png?hello%%20world=interesting", u)
+	assert.Equal(t, "https://test.imgix.net/demo.png?hello%20world=interesting", u)
 }
 
 func TestClientPathWithParamsEncodesParamValues(t *testing.T) {
 	c := testClient()
 	params := url.Values{"hello_world": []string{"/foo\"> <script>alert(\"hacked\")</script><"}}
 	u := c.CreateURL("/demo.png", params)
-	assert.Equal(t, "https://test.imgix.net/demo.png?hello_world=%2Ffoo%22%3E%%20%3Cscript%3Ealert%28%22hacked%22%29%3C%2Fscript%3E%3C", u)
+	assert.Equal(t, "https://test.imgix.net/demo.png?hello_world=%2Ffoo%22%3E%20%3Cscript%3Ealert%28%22hacked%22%29%3C%2Fscript%3E%3C", u)
 }
 
 func TestClientPathWithParamsEncodesBase64ParamVariants(t *testing.T) {

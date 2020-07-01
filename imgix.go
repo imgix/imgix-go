@@ -205,7 +205,7 @@ func maybeBase64EncodeParameters(params *url.Values) {
 // TODO: Revisit this encoding and replacement code.
 func createParameterString(params url.Values, signature string) string {
 	parameterString := params.Encode()
-	parameterString = strings.Replace(parameterString, "+", "%%20", -1)
+	parameterString = strings.Replace(parameterString, "+", "%20", -1)
 
 	if signature != "" && len(params) > 0 {
 		parameterString += "&" + signature
