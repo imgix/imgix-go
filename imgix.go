@@ -463,3 +463,49 @@ func cgiEscape(s string) string {
 		return "%" + strings.ToUpper(fmt.Sprintf("%x", runeValue))
 	})
 }
+
+func encodePathOrProxy(p string) string {
+	if isProxy(p) {
+		return encodeProxy(p)
+	}
+
+	return encodePath(p)
+}
+
+func isProxy(p string) bool {
+	return false
+}
+
+func encodeProxy(p string) string {
+	return ""
+}
+
+func encodePath(p string) string {
+	return ""
+}
+
+func encodeQueryParams(params map[string]string) (encodedParams string) {
+	return encodedParams
+}
+
+func encodeQueryParam(key string, value string) (k string, eV string) {
+	if isBase64(key) {
+		eV = base64EncodeQueryParamValue(value)
+		return k, eV
+	}
+
+	eV = encodeQueryParamValue(value)
+	return k, eV
+}
+
+func isBase64(param string) bool {
+	return false
+}
+
+func base64EncodeQueryParamValue(queryValue string) string {
+	return "__64__"
+}
+
+func encodeQueryParamValue(queryValue string) string {
+	return ""
+}
