@@ -452,3 +452,17 @@ func TestReadMe_TargetWidths(t *testing.T) {
 		"https://demos.imgix.net/image.png?w=476 476w"
 	assert.Equal(t, actualSrcset, srcset)
 }
+
+func TestEncoding_isBase64(t *testing.T) {
+	assert.True(t, isBase64("64"))
+	assert.True(t, isBase64("   64"))
+	assert.True(t, isBase64("646464"))
+	assert.True(t, isBase64("fit64"))
+	assert.True(t, isBase64("markalign64"))
+}
+
+func TestEncoding_isNotBase64(t *testing.T) {
+	assert.False(t, isBase64("6  4"))
+	assert.False(t, isBase64("646464 "))
+	assert.False(t, isBase64("\x40"))
+}

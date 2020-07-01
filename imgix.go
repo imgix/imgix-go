@@ -468,7 +468,6 @@ func encodePathOrProxy(p string) string {
 	if isProxy(p) {
 		return encodeProxy(p)
 	}
-
 	return encodePath(p)
 }
 
@@ -498,8 +497,8 @@ func encodeQueryParam(key string, value string) (k string, eV string) {
 	return k, eV
 }
 
-func isBase64(param string) bool {
-	return false
+func isBase64(paramKey string) bool {
+	return strings.HasSuffix(paramKey, "64")
 }
 
 func base64EncodeQueryParamValue(queryValue string) string {
