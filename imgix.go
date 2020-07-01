@@ -502,7 +502,15 @@ func isBase64(paramKey string) bool {
 }
 
 func base64EncodeQueryParamValue(queryValue string) string {
-	return "__64__"
+	maybePaddedValue := base64.StdEncoding.EncodeToString([]byte(queryValue))
+	return unPad(maybePaddedValue)
+}
+
+func unPad(s string) string {
+	if strings.HasSuffix(s, "=") {
+		return strings.Replace(s, "=", "", -1)
+	}
+	return s
 }
 
 func encodeQueryParamValue(queryValue string) string {

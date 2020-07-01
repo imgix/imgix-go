@@ -1,6 +1,7 @@
 package imgix
 
 import (
+	"encoding/base64"
 	"log"
 	"net/url"
 	"os"
@@ -465,4 +466,19 @@ func TestEncoding_isNotBase64(t *testing.T) {
 	assert.False(t, isBase64("6  4"))
 	assert.False(t, isBase64("646464 "))
 	assert.False(t, isBase64("\x40"))
+}
+
+func TestEncoding_base64EncodeQueryParamValue(t *testing.T) {
+	const expectedWarmUp = "SGVsbG8sIOS4lueVjA"
+	const data = "Hello, 世界"
+	actualWarmUp := base64EncodeQueryParamValue(data)
+	assert.Equal(t, expectedWarmUp, actualWarmUp)
+
+	const preEncoded = "Avenir Next Demi,Bold"
+	const expectedAve = "QXZlbmlyIE5leHQgRGVtaSxCb2xk"
+	actualAve := base64EncodeQueryParamValue("Avenir Next Demi,Bold")
+	assert.Equal(t, expectedAve, actualAve)
+
+	decodedAve, _ := base64.StdEncoding.DecodeString(actualAve)
+	assert.Equal(t, preEncoded, string(decodedAve))
 }
