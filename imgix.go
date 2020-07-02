@@ -518,7 +518,7 @@ func encodeQueryParam(key string, value string) (string, eV string) {
 
 	eV = encodeQueryParamValue(value)
 	// TODO: Edge Case
-	// Look into weather or not this is the behavior we need here.
+	// Look into whether or not this is the behavior we need here.
 	eKey := encodeQueryParamValue(key)
 	return eKey, eV
 }
