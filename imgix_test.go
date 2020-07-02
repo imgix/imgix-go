@@ -528,4 +528,7 @@ func TestEncoding_encodePathBasic(t *testing.T) {
 	const expected = `images%2F%22image%201%22.png`
 	actual := encodePathOrProxy(path)
 	assert.Equal(t, expected, actual)
+
+	decodedPath, _ := url.PathUnescape(actual)
+	assert.Equal(t, path, decodedPath)
 }
