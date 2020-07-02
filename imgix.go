@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -146,7 +147,6 @@ func (b *URLBuilder) createAndMaybeSignURL(path string, params url.Values, shoul
 	// TODO: This portion is still a little busy...
 	path = maybePrependSlash(path)
 	urlWithPath := strings.Join([]string{urlString, path}, "")
-	maybeBase64EncodeParameters(&params)
 
 	var parameterString string
 	if shouldSign {
@@ -191,21 +191,10 @@ func createMd5Signature(token string, path string, params string) string {
 	return hex.EncodeToString(hashedSig.Sum(nil))
 }
 
-// maybeBase64EncodeParameters base64-encodes a parameter
-// if the parameter has the "64" suffix.
-func maybeBase64EncodeParameters(params *url.Values) {
-	for key, val := range *params {
-		if strings.HasSuffix(key, "64") {
-			encodedParam := base64EncodeParameter(val[0])
-			params.Set(key, encodedParam)
-		}
-	}
-}
-
 // TODO: Revisit this encoding and replacement code.
 func createParameterString(params url.Values, signature string) string {
-	parameterString := params.Encode()
-	parameterString = strings.Replace(parameterString, "+", "%20", -1)
+	encodedParameters := encodeQueryParamsFromValues(params)
+	parameterString := strings.Join(encodedParameters, "&")
 
 	if signature != "" && len(params) > 0 {
 		parameterString += "&" + signature
@@ -224,16 +213,6 @@ func maybePrependSlash(path string) string {
 		path = strings.Join([]string{Slash, path}, "")
 	}
 	return path
-}
-
-// Base64-encodes a parameter according to imgix's Base64 variant requirements.
-// https://docs.imgix.com/apis/url#base64-variants
-func base64EncodeParameter(param string) string {
-	paramData := []byte(param)
-	base64EncodedParam := base64.URLEncoding.EncodeToString(paramData)
-	base64EncodedParam = strings.Replace(base64EncodedParam, "=", "", -1)
-
-	return base64EncodedParam
 }
 
 // tolerance is the default width tolerance percentage.
@@ -330,8 +309,6 @@ var DefaultOpts = SrcSetOpts{
 	disableVariableQuality: false,
 }
 
-// *********************************************************************
-
 // CreateSrcSetFromRange creates a srcset attribute whose URLs
 // are described by the widths within the specified range. begin,
 // end, and tol (tolerance) define the widths-range. The range
@@ -348,8 +325,6 @@ func (b *URLBuilder) CreateSrcSetFromRange(path string, params url.Values, wr Wi
 func (b *URLBuilder) CreateSrcSetFromWidths(path string, params url.Values, widths []int) string {
 	return b.buildSrcSetPairs(path, params, widths)
 }
-
-// *********************************************************************
 
 // buildSrcSetPairs builds a srcset attribute string containing width-described
 // image candidate strings.
@@ -502,6 +477,9 @@ func encodeProxy(p string, isEncoded bool) string {
 	// means that ':' (colon) will be considered unreserved and make it
 	// into the escaped path. It also means that '/', ';', ',', and '?'
 	// will be escaped.
+	//
+	// See:
+	// https://golang.org/src/net/url/url.go?s=7851:7884#L137
 	nearlyEscaped := url.PathEscape(p)
 	escapedProxyPath := strings.Replace(nearlyEscaped, ":", "%3A", -1)
 	return escapedProxyPath
@@ -511,18 +489,49 @@ func encodePath(p string) string {
 	return url.PathEscape(p)
 }
 
-func encodeQueryParams(params map[string]string) (encodedParams string) {
+func encodeQueryParamsFromValues(params url.Values) (encodedParams []string) {
+
+	keys := make([]string, 0, len(params))
+
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		encodedKey, encodedValue := encodeQueryParam(k, params.Get(k))
+		encodedPairStr := joinQueryPair(encodedKey, encodedValue)
+		encodedParams = append(encodedParams, encodedPairStr)
+	}
 	return encodedParams
 }
 
-func encodeQueryParam(key string, value string) (k string, eV string) {
+func joinQueryPair(key string, value string) string {
+	return strings.Join([]string{key, value}, "=")
+}
+
+func encodeQueryParam(key string, value string) (string, eV string) {
 	if isBase64(key) {
 		eV = base64EncodeQueryParamValue(value)
-		return k, eV
+		return key, eV
 	}
 
 	eV = encodeQueryParamValue(value)
-	return k, eV
+	// TODO: Edge Case
+	// Look into weather or not this is the behavior we need here.
+	eKey := encodeQueryParamValue(key)
+	return eKey, eV
+}
+
+func encodeQueryParamValue(queryValue string) string {
+	// Per net/url, (w.r.t. query components):
+	// "The RFC reserves (so we must escape) everything..."
+	//
+	// See:
+	// https://golang.org/src/net/url/url.go?s=7851:7884#L149
+	nearlyEscaped := url.QueryEscape(queryValue)
+	fullyEscaped := strings.Replace(nearlyEscaped, "+", "%20", -1)
+	return fullyEscaped
 }
 
 func isBase64(paramKey string) bool {
@@ -530,7 +539,7 @@ func isBase64(paramKey string) bool {
 }
 
 func base64EncodeQueryParamValue(queryValue string) string {
-	maybePaddedValue := base64.StdEncoding.EncodeToString([]byte(queryValue))
+	maybePaddedValue := base64.URLEncoding.EncodeToString([]byte(queryValue))
 	return unPad(maybePaddedValue)
 }
 
@@ -539,8 +548,4 @@ func unPad(s string) string {
 		return strings.Replace(s, "=", "", -1)
 	}
 	return s
-}
-
-func encodeQueryParamValue(queryValue string) string {
-	return ""
 }

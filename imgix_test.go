@@ -76,7 +76,8 @@ func TestClientPathWithParamsEncodesParamValues(t *testing.T) {
 
 func TestClientPathWithParamsEncodesBase64ParamVariants(t *testing.T) {
 	c := testClient()
-	params := url.Values{"txt64": []string{"I cannøt belîév∑ it wors! 😱"}}
+	uni := `I cannøt belîév∑ it wors! 😱`
+	params := url.Values{"txt64": []string{uni}}
 	u := c.CreateURL("~text", params)
 	assert.Equal(t, "https://test.imgix.net/~text?txt64=SSBjYW5uw7h0IGJlbMOuw6l24oiRIGl0IHdvcu-jv3MhIPCfmLE", u)
 }
@@ -481,6 +482,13 @@ func TestEncoding_base64EncodeQueryParamValue(t *testing.T) {
 
 	decodedAve, _ := base64.StdEncoding.DecodeString(actualAve)
 	assert.Equal(t, preEncoded, string(decodedAve))
+}
+
+func TestEncoding_base64UTF8(t *testing.T) {
+	s := `I cannøt belîév∑ it wors! 😱`
+	actual := base64EncodeQueryParamValue(s)
+	expected := "SSBjYW5uw7h0IGJlbMOuw6l24oiRIGl0IHdvcu-jv3MhIPCfmLE"
+	assert.Equal(t, expected, actual)
 }
 
 func TestEncoding_checkProxyStatusEmpty(t *testing.T) {
