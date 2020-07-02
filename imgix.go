@@ -465,22 +465,50 @@ func cgiEscape(s string) string {
 }
 
 func encodePathOrProxy(p string) string {
-	if isProxy(p) {
-		return encodeProxy(p)
+	isProxy, isEncoded := checkProxyStatus(p)
+
+	if isProxy {
+		return encodeProxy(p, isEncoded)
 	}
 	return encodePath(p)
 }
 
-func isProxy(p string) bool {
-	return false
+func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
+	// If we don't use a slash here, then we could do a prefix check
+	// in the calling code and pass a slice to this function (if
+	// the original sequence is prefixed with a slash).
+	const asciiHTTP = "http://"
+	const asciiHTTPS = "https://"
+	if strings.HasPrefix(p, asciiHTTP) || strings.HasPrefix(p, asciiHTTPS) {
+		return true, false
+	}
+	const encodedHTTP = "http%3A%2F%2F"
+	const encodedHTTPS = "https%3A%2F%2F"
+
+	if strings.HasPrefix(p, encodedHTTP) || strings.HasPrefix(p, encodedHTTPS) {
+		return true, true
+	}
+	return false, false
 }
 
-func encodeProxy(p string) string {
-	return ""
+func encodeProxy(p string, isEncoded bool) string {
+	if isEncoded {
+		return p
+	}
+	// HACK?
+	// The proxy "path" is nearly escaped for our use-case after the
+	// call to `PathEscape`. Per net/url, `PathEscape` enters
+	// `shouldEscape` with the `mode` set to `encodePathSegment`. This
+	// means that ':' (colon) will be considered unreserved and make it
+	// into the escaped path. It also means that '/', ';', ',', and '?'
+	// will be escaped.
+	nearlyEscaped := url.PathEscape(p)
+	escapedProxyPath := strings.Replace(nearlyEscaped, ":", "%3A", -1)
+	return escapedProxyPath
 }
 
 func encodePath(p string) string {
-	return ""
+	return url.PathEscape(p)
 }
 
 func encodeQueryParams(params map[string]string) (encodedParams string) {

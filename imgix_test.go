@@ -482,3 +482,50 @@ func TestEncoding_base64EncodeQueryParamValue(t *testing.T) {
 	decodedAve, _ := base64.StdEncoding.DecodeString(actualAve)
 	assert.Equal(t, preEncoded, string(decodedAve))
 }
+
+func TestEncoding_checkProxyStatusEmpty(t *testing.T) {
+	isProxy, isEncoded := checkProxyStatus("")
+	assert.Equal(t, false, isProxy)
+	assert.Equal(t, false, isEncoded)
+}
+
+func TestEncoding_checkProxyStatusEncoded(t *testing.T) {
+	const encodedProxy = "http%3A%2F%2Fwww.this.com%2Fpic.jpg"
+	isProxy, isEncoded := checkProxyStatus(encodedProxy)
+	assert.Equal(t, true, isProxy)
+	assert.Equal(t, true, isEncoded)
+}
+
+func TestEncoding_checkProxyStatusAscii(t *testing.T) {
+
+	const proxyHTTP = "http://www.this.com/pic.jpg"
+	isProxyHTTP, isEncodedHTTP := checkProxyStatus(proxyHTTP)
+	assert.Equal(t, true, isProxyHTTP)
+	assert.Equal(t, false, isEncodedHTTP)
+
+	const proxyHTTPS = "https://www.this.com/pic.jpg"
+	isProxyHTTPS, isEncodedHTTPS := checkProxyStatus(proxyHTTPS)
+	assert.Equal(t, true, isProxyHTTPS)
+	assert.Equal(t, false, isEncodedHTTPS)
+}
+
+func TestEncoding_encodePathProxyEncoded(t *testing.T) {
+	const encodedProxyPath = "http%3A%2F%2Fwww.this.com%2Fpic.jpg"
+	actual := encodePathOrProxy(encodedProxyPath)
+	assert.Equal(t, encodedProxyPath, actual)
+}
+
+func TestEncoding_encodePathProxyRaw(t *testing.T) {
+	const proxyPath = "http://www.this.com/pic.jpg"
+	const expected = "http%3A%2F%2Fwww.this.com%2Fpic.jpg"
+	actual := encodePathOrProxy(proxyPath)
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestEncoding_encodePathBasic(t *testing.T) {
+	const path = `images/"image 1".png`
+	const expected = `images%2F%22image%201%22.png`
+	actual := encodePathOrProxy(path)
+	assert.Equal(t, expected, actual)
+}
