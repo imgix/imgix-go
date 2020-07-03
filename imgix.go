@@ -462,21 +462,25 @@ func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
 	return false, false
 }
 
-func encodeProxy(p string, isEncoded bool) string {
+// encodeProxy will encode the given path string if it hasn't been
+// encoded. If the path string isEncoded, then the path string is
+// returned unchanged. Otherwise, the path is passed to PathEscape.
+// The proxy-path is nearly escaped for our use-case after the call
+// to PathEscape.
+//
+// Per net/url, PathEscape enters the shouldEscape function with the
+// mode set to encodePathSegment. This means that COLON (:) will be
+// considered unreserved and make it into the escaped path component.
+// It also means that '/', ';', ',', and '?' will be escaped.
+//
+// See:
+// https://golang.org/src/net/url/url.go?s=7851:7884#L137
+func encodeProxy(proxyPath string, isEncoded bool) (escapedProxyPath string) {
 	if isEncoded {
-		return p
+		return proxyPath
 	}
-	// The proxy "path" is nearly escaped for our use-case after the
-	// call to `PathEscape`. Per net/url, `PathEscape` enters
-	// `shouldEscape` with the `mode` set to `encodePathSegment`. This
-	// means that ':' (colon) will be considered unreserved and make it
-	// into the escaped path. It also means that '/', ';', ',', and '?'
-	// will be escaped.
-	//
-	// See:
-	// https://golang.org/src/net/url/url.go?s=7851:7884#L137
-	nearlyEscaped := url.PathEscape(p)
-	escapedProxyPath := strings.Replace(nearlyEscaped, ":", "%3A", -1)
+	nearlyEscaped := url.PathEscape(proxyPath)
+	escapedProxyPath = strings.Replace(nearlyEscaped, ":", "%3A", -1)
 	return escapedProxyPath
 }
 
