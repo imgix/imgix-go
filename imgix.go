@@ -517,14 +517,21 @@ func encodeQueryParam(key string, value string) (eK string, eV string) {
 	return eK, eV
 }
 
+// encodeQueryParamValue encodes a query parameter value by first
+// replacing all PLUS (+) characters with their escaped form, '%2B'.
+// The value with escaped PLUS signs is passed to QueryEscape
+// which escapes "everything." This function aggressively escapes PLUS
+// (+) as SPACE and substitutes '%20' (for PLUS) and this is why we
+// attempt to preserve PLUS (+) characters first, then escape the
+// query, and then go back through and replace all the PLUS (+) signs
+// which Go's net/url module prefers.
+//
+// See:
+// https://golang.org/src/net/url/url.go?s=7851:7884#L149
 func encodeQueryParamValue(queryValue string) string {
-	// Per net/url, (w.r.t. query components):
-	// "The RFC reserves (so we must escape) everything..."
-	//
-	// See:
-	// https://golang.org/src/net/url/url.go?s=7851:7884#L149
-	nearlyEscaped := url.QueryEscape(queryValue)
-	fullyEscaped := strings.Replace(nearlyEscaped, "+", "%20", -1)
+	escapedPlus := strings.Replace(queryValue, "+", "%2B", -1)
+	queryEscaped := url.QueryEscape(escapedPlus)
+	fullyEscaped := strings.Replace(queryEscaped, "+", "%20", -1)
 	return fullyEscaped
 }
 
