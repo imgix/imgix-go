@@ -540,3 +540,12 @@ func TestEncoding_encodePathBasic(t *testing.T) {
 	decodedPath, _ := url.PathUnescape(actual)
 	assert.Equal(t, path, decodedPath)
 }
+
+func TestEncoding_showPathEscapeHandlesPlus(t *testing.T) {
+	// Encoding is a nuanced topic (or it can be), so test
+	// that PathEscape escapes SPACE characters as '%20'.
+	const path = `images/"image 1".png`
+	const expected = `images%2F%22image%201%22.png`
+	actual := url.PathEscape(path)
+	assert.Equal(t, expected, actual)
+}
