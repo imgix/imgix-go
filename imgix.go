@@ -109,7 +109,6 @@ func (b *URLBuilder) CreateSrcSet(path string, params url.Values, opts SrcSetOpt
 	return b.buildSrcSetPairs(path, params, targets)
 }
 
-// *********************************************************************
 // CreateSignedURL is like CreateURL except that it creates a signed URL.
 func (b *URLBuilder) CreateSignedURL(path string, params url.Values) string {
 	return b.createAndMaybeSignURL(path, params, true)
@@ -125,8 +124,6 @@ func (b *URLBuilder) CreateURLFromPath(path string) string {
 func (b *URLBuilder) CreateSignedURLFromPath(path string) string {
 	return b.createAndMaybeSignURL(path, url.Values{}, true)
 }
-
-// *********************************************************************
 
 // createURLFromPathAndParams will manually build a URL from a given path string and
 // parameters passed in. Because of the differences in how net/url escapes
@@ -440,15 +437,14 @@ func cgiEscape(s string) string {
 }
 
 func encodePathOrProxy(p string) string {
-	isProxy, isEncoded := checkProxyStatus(p)
-
-	if isProxy {
+	if isProxy, isEncoded := checkProxyStatus(p); isProxy {
 		return encodeProxy(p, isEncoded)
 	}
 	return encodePath(p)
 }
 
 func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
+	// TODO:
 	// If we don't use a slash here, then we could do a prefix check
 	// in the calling code and pass a slice to this function (if
 	// the original sequence is prefixed with a slash).
@@ -470,7 +466,6 @@ func encodeProxy(p string, isEncoded bool) string {
 	if isEncoded {
 		return p
 	}
-	// HACK?
 	// The proxy "path" is nearly escaped for our use-case after the
 	// call to `PathEscape`. Per net/url, `PathEscape` enters
 	// `shouldEscape` with the `mode` set to `encodePathSegment`. This
@@ -510,17 +505,16 @@ func joinQueryPair(key string, value string) string {
 	return strings.Join([]string{key, value}, "=")
 }
 
-func encodeQueryParam(key string, value string) (string, eV string) {
+func encodeQueryParam(key string, value string) (eK string, eV string) {
+	eK = encodeQueryParamValue(key)
+
 	if isBase64(key) {
 		eV = base64EncodeQueryParamValue(value)
-		return key, eV
+		return eK, eV
 	}
 
 	eV = encodeQueryParamValue(value)
-	// TODO: Edge Case
-	// Look into whether or not this is the behavior we need here.
-	eKey := encodeQueryParamValue(key)
-	return eKey, eV
+	return eK, eV
 }
 
 func encodeQueryParamValue(queryValue string) string {
@@ -534,10 +528,19 @@ func encodeQueryParamValue(queryValue string) string {
 	return fullyEscaped
 }
 
+// isBase64 checks if the paramKey is suffixed by "64," indicating
+// that the value is intended to be base64-URL-encoded.
 func isBase64(paramKey string) bool {
 	return strings.HasSuffix(paramKey, "64")
 }
 
+// base64EncodeQueryParamValue base64 encodes the queryValue string. It
+// does so in accordance with RFC 4648, which obsoletes RFC 3548. The
+// important points are that the diff isn't significant for anything
+// we care about.
+//
+// See:
+// https://tools.ietf.org/rfcdiff?url2=rfc4648
 func base64EncodeQueryParamValue(queryValue string) string {
 	maybePaddedValue := base64.URLEncoding.EncodeToString([]byte(queryValue))
 	return unPad(maybePaddedValue)
