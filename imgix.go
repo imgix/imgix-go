@@ -162,17 +162,8 @@ func (b *URLBuilder) createAndMaybeSignURL(path string, params url.Values, shoul
 // signPathAndParams takes a builder's token value, a path, and a set of
 // params and creates a signature from these values.
 func (b *URLBuilder) signPathAndParams(path string, params url.Values) string {
-	hasQueryParams := false
-
-	if len(params) > 0 {
-		hasQueryParams = true
-	}
-	queryParams := params.Encode()
+	queryParams := strings.Join(encodeQueryParamsFromValues(params), "&")
 	signature := createMd5Signature(b.token, path, queryParams)
-
-	if hasQueryParams {
-		return strings.Join([]string{"s=", signature}, "")
-	}
 	return strings.Join([]string{"s=", signature}, "")
 }
 
@@ -180,15 +171,20 @@ func (b *URLBuilder) signPathAndParams(path string, params url.Values) string {
 // strings into a signatureBase. Next, create a hashedSig and write the
 // signatureBase into it. Finally, return the encoded, signed string.
 func createMd5Signature(token string, path string, params string) string {
-	// TODO: survey the kit for sig bases.
 	var delim string
+
+	if params == "" {
+		delim = ""
+	} else {
+		delim = "?"
+	}
+
 	signatureBase := strings.Join([]string{token, path, delim, params}, "")
 	hashedSig := md5.New()
 	hashedSig.Write([]byte(signatureBase))
 	return hex.EncodeToString(hashedSig.Sum(nil))
 }
 
-// TODO: Revisit this encoding and replacement code.
 func createParameterString(params url.Values, signature string) string {
 	encodedParameters := encodeQueryParamsFromValues(params)
 	parameterString := strings.Join(encodedParameters, "&")
