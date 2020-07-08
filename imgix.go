@@ -553,6 +553,13 @@ func base64EncodeQueryParamValue(queryValue string) string {
 	return unPad(maybePaddedValue)
 }
 
+// unPad removes the extra '=' (equal signs) from strings. In base64,
+// '=' are added to the end of the encoding as padding. This padding
+// is significant if concatenating multiple base64-encoded strings.
+// In our case, '&' acts as the primary delimeter and base64-encoded
+// strings (query string values, usually) are dealt with individually
+// (meaning that the length of the base64 encoded string is always
+// known; this is important when decoding base64).
 func unPad(s string) string {
 	if strings.HasSuffix(s, "=") {
 		return strings.Replace(s, "=", "", -1)
