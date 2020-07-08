@@ -440,19 +440,23 @@ func encodePathOrProxy(p string) string {
 }
 
 func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
-	// TODO:
-	// If we don't use a slash here, then we could do a prefix check
-	// in the calling code and pass a slice to this function (if
-	// the original sequence is prefixed with a slash).
+	// Rather than adding or removing a '/', check if `p` is prefixed
+	// with a '/'. If so, use another slice with the leading '/'
+	// removed.
+	path := p
+	if strings.HasPrefix(p, "/") {
+		path = p[1:]
+	}
+
 	const asciiHTTP = "http://"
 	const asciiHTTPS = "https://"
-	if strings.HasPrefix(p, asciiHTTP) || strings.HasPrefix(p, asciiHTTPS) {
+	if strings.HasPrefix(path, asciiHTTP) || strings.HasPrefix(path, asciiHTTPS) {
 		return true, false
 	}
+
 	const encodedHTTP = "http%3A%2F%2F"
 	const encodedHTTPS = "https%3A%2F%2F"
-
-	if strings.HasPrefix(p, encodedHTTP) || strings.HasPrefix(p, encodedHTTPS) {
+	if strings.HasPrefix(path, encodedHTTP) || strings.HasPrefix(path, encodedHTTPS) {
 		return true, true
 	}
 	return false, false
