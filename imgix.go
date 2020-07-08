@@ -75,8 +75,8 @@ func (b *URLBuilder) CreateURL(path string, params url.Values) string {
 }
 
 // CreateSrcSet creates a srcset attribute string. Given a path, set of
-// parameters, and a Config, this function infers which kind of srcset
-// attribute to create.
+// parameters, and a set of SrcSetOpts, this function infers which kind
+// of srcset attribute to create.
 //
 // If the params contain a width parameter or both
 // height and aspect ratio parameters, a fixed-width srcset attribute
@@ -100,7 +100,7 @@ func (b *URLBuilder) CreateSrcSet(path string, params url.Values, opts SrcSetOpt
 		return b.buildSrcSetDpr(path, params, opts.disableVariableQuality)
 	}
 
-	// Otherwise, get the widthRange values from the config and build a
+	// Otherwise, get the widthRange values from the opts and build a
 	// width-pairs based srcset attribute.
 	begin := opts.widthRange.begin
 	end := opts.widthRange.end
