@@ -3,7 +3,15 @@ package imgix
 import (
 	"errors"
 	"fmt"
+	"regexp"
 )
+
+// Todo: Review this regex, and the one that follows.
+// Matches http:// and https://
+var RegexpHTTPAndS = regexp.MustCompile("https?://")
+
+// Regexp for all characters we should escape in a URI passed in.
+var RegexUrlCharactersToEscape = regexp.MustCompile("([^ a-zA-Z0-9_.-])")
 
 const zero = 0
 
