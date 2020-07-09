@@ -265,7 +265,11 @@ srcset := ub.CreateSrcSetFromWidths("image.png", url.Values{}, sm)
 
 For security and diagnostic purposes, we sign all requests with the language and version of library used to generate the URL.
 
+The `ixlib` parameter can be toggled off by setting `useLibParam` via `SetUseLibParam`:
+
 ```go
+ub := NewURLBuilder("demo.imgix.net")
+ub.SetUseLibParam(false)
 ```
 
 <!-- Test Instructions -->
