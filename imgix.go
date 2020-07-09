@@ -1,174 +1,147 @@
 package imgix
 
 import (
-	"crypto/md5"
-	"encoding/base64"
-	"encoding/hex"
-	"fmt"
 	"net/url"
-	"regexp"
 	"strings"
-	"unicode/utf8"
 )
 
-// Matches http:// and https://
-var RegexpHTTPAndS = regexp.MustCompile("https?://")
+const ixLibVersion = "go-v0.0.0"
 
-// Regexp for all characters we should escape in a URI passed in.
-var RegexUrlCharactersToEscape = regexp.MustCompile("([^ a-zA-Z0-9_.-])")
-
-// Create a new Client with the given domain, with HTTPS enabled.
-func NewClient(domain string) Client {
-	return Client{domain: domain, secure: true}
+// URLBuilder facilitates the building of URLs.
+type URLBuilder struct {
+	domain      string
+	token       string
+	useHTTPS    bool
+	useLibParam bool
 }
 
-// Create a new Client with the given domain and token. HTTPS enabled.
-func NewClientWithToken(domain string, token string) Client {
-	return Client{domain: domain, secure: true, token: token}
-}
-
-// The Client is used to build URLs.
-type Client struct {
-	domain string
-	token  string
-	secure bool
-}
-
-// Returns whether HTTPS should be used.
-func (c *Client) Secure() bool {
-	return c.secure
-}
-
-// Returns the URL scheme to use. One of 'http' or 'https'.
-func (c *Client) Scheme() string {
-	if c.Secure() {
-		return "https"
-	} else {
-		return "http"
+// NewURLBuilder creates a new URLBuilder with the given domain, with HTTPS enabled.
+func NewURLBuilder(domain string) URLBuilder {
+	validDomain, err := validateDomain(domain)
+	if err != nil {
+		// Do something
 	}
+	return URLBuilder{domain: validDomain, useHTTPS: true, useLibParam: true}
 }
 
-// Returns the domain for the given path.
-func (c *Client) Domain() string {
-	return RegexpHTTPAndS.ReplaceAllString(c.domain, "") // Strips out the scheme if exists
+// NewSecureURLBuilder creates a new URLBuilder with the given domain and token
+// with HTTPS enabled.
+func NewSecureURLBuilder(domain string, token string) URLBuilder {
+	validDomain, err := validateDomain(domain)
+	if err != nil {
+		// Do something
+	}
+	return URLBuilder{domain: validDomain, token: token, useHTTPS: true, useLibParam: true}
 }
 
-// Creates and returns the URL signature in the form of "s=SIGNATURE" with
-// no values.
-func (c *Client) SignatureForPath(path string) string {
-	return c.SignatureForPathAndParams(path, url.Values{})
+// UseHTTPS returns whether HTTPS or HTTP should be used.
+func (b *URLBuilder) UseHTTPS() bool {
+	return b.useHTTPS
 }
 
-// Creates and returns the URL signature in the form of "s=SIGNATURE" for
-// the given parameters. Requires that the client have a token.
-func (c *Client) SignatureForPathAndParams(path string, params url.Values) string {
-	if c.token == "" {
+// SetUseLibParam toggles the library param on and off. If useLibParam is set to
+// true, the ixlib param will be toggled on. Otherwise, if useLibParam is set to
+// false, the ixlib param will be toggled off and will not appear in the final URL.
+func (b *URLBuilder) SetUseLibParam(useLibParam bool) {
+	b.useLibParam = useLibParam
+}
+
+// SetUseHTTPS sets a builder's useHTTPS field to true or false. Setting
+// useHTTPS to false forces the builder to use HTTP.
+func (b *URLBuilder) SetUseHTTPS(useHTTPS bool) {
+	b.useHTTPS = useHTTPS
+}
+
+// Scheme gets the URL scheme to use, either "http" or "https"
+// (the scheme uses HTTPS by default).
+func (b *URLBuilder) Scheme() string {
+	if b.UseHTTPS() {
+		return "https"
+	}
+	return "http"
+}
+
+// Domain gets the builder's domain string.
+func (b *URLBuilder) Domain() string {
+	return b.domain
+}
+
+// SetToken sets the token for this builder. This value will be used to sign
+// URLs created through the builder.
+func (b *URLBuilder) SetToken(token string) {
+	b.token = token
+}
+
+// CreateURL creates a URL string given a path and a set of
+// params.
+func (b *URLBuilder) CreateURL(path string, params url.Values) string {
+	scheme := b.Scheme()
+	domain := b.Domain()
+	path = processPath(path)
+	query := b.buildQueryString(params)
+	signature := b.sign(path, query)
+
+	url := scheme + "://" + domain + path
+
+	// If the query and signature are empty, return the url.
+	if query == "" && signature == "" {
+		return url
+	}
+
+	// If the signature is empty, but the query is not,
+	// return the url with the query appended.
+	if query != "" && signature == "" {
+		return url + "?" + query
+	}
+
+	// If the query is empty, but the signature is not,
+	// return the url with the signature appended.
+	if query == "" && signature != "" {
+		return url + "?" + signature
+	}
+
+	// If neither query nor signature is empty, append the
+	// query, then append the signature.
+	if query != "" && signature != "" {
+		url += "?" + query + "&" + signature
+	}
+
+	return url
+}
+
+func (b *URLBuilder) buildQueryString(params url.Values) string {
+	var encodedQueryParts []string
+	if b.useLibParam {
+		params.Add("ixlib", ixLibVersion)
+	}
+	encodedQueryParts = encodeQuery(params)
+	return strings.Join(encodedQueryParts, "&")
+}
+
+func (b *URLBuilder) sign(path string, query string) string {
+	if b.token == "" {
 		return ""
 	}
 
-	hasher := md5.New()
-	hasher.Write([]byte(c.token + path))
-
-	// Do not mix in the parameters into the signature hash if no parameters
-	// have been given
-	if len(params) != 0 {
-		hasher.Write([]byte("?" + params.Encode()))
-	}
-
-	return "s=" + hex.EncodeToString(hasher.Sum(nil))
+	signature := createMd5Signature(b.token, path, query)
+	return strings.Join([]string{"s=", signature}, "")
 }
 
-// Builds the full URL to the image (including the domain) with no params.
-func (c *Client) Path(imgPath string) string {
-	return c.PathWithParams(imgPath, url.Values{})
-}
-
-// `PathWithParams` will manually build a URL from a given path string and
-// parameters passed in. Because of the differences in how net/url escapes
-// path components, we need to manually build a URL as best we can.
-//
-// The behavior of this function is highly dependent upon its test suite.
-func (c *Client) PathWithParams(imgPath string, params url.Values) string {
-	u := url.URL{
-		Scheme: c.Scheme(),
-		Host:   c.Domain(),
+// processPath processes a path string into a form that can be
+// safely used in a URL path segment.
+func processPath(path string) string {
+	if path == "" {
+		return path
 	}
 
-	urlString := u.String()
-
-	// If we are given a fully-qualified URL, escape it per the note located
-	// near the `cgiEscape` function definition
-	if RegexpHTTPAndS.MatchString(imgPath) {
-		imgPath = cgiEscape(imgPath)
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
 	}
 
-	// Add a leading slash if one does not exist:
-	//     "users/1.png" -> "/users/1.png"
-	if strings.Index(imgPath, "/") != 0 {
-		imgPath = "/" + imgPath
+	isProxy, isEncoded := checkProxyStatus(path)
+
+	if isProxy {
+		return encodeProxy(path, isEncoded)
 	}
-
-	urlString += imgPath
-
-	for key, val := range params {
-		if strings.HasSuffix(key, "64") {
-			encodedParam := base64EncodeParameter(val[0])
-			params.Set(key, encodedParam)
-		}
-	}
-
-	// The signature in an imgix URL must always be the **last** parameter in a URL,
-	// hence some of the gross string concatenation here. net/url will aggressively
-	// alphabetize the URL parameters.
-	signature := c.SignatureForPathAndParams(imgPath, params)
-	parameterString := params.Encode()
-	parameterString = strings.Replace(parameterString, "+", "%%20", -1)
-
-	if signature != "" && len(params) > 0 {
-		parameterString += "&" + signature
-	} else if signature != "" && len(params) == 0 {
-		parameterString = signature
-	}
-
-	// Only append the parameter string if it is not blank.
-	if parameterString != "" {
-		urlString += "?" + parameterString
-	}
-
-	return urlString
-}
-
-// Base64-encodes a parameter according to imgix's Base64 variant requirements.
-// https://docs.imgix.com/apis/url#base64-variants
-func base64EncodeParameter(param string) string {
-	paramData := []byte(param)
-	base64EncodedParam := base64.URLEncoding.EncodeToString(paramData)
-	base64EncodedParam = strings.Replace(base64EncodedParam, "=", "", -1)
-
-	return base64EncodedParam
-}
-
-// This code is less than ideal, but it's the only way we've found out how to do it
-// give Go's URL capabilities and escaping behavior.
-//
-// This method replicates the beavhior of Ruby's CGI::escape in Go.
-//
-// Here is that method:
-//
-//     def CGI::escape(string)
-//       string.gsub(/([^ a-zA-Z0-9_.-]+)/) do
-//         '%' + $1.unpack('H2' * $1.bytesize).join('%').upcase
-//       end.tr(' ', '+')
-//      end
-//
-// It replaces
-//
-// See:
-//  - https://github.com/parkr/imgix-go/pull/1#issuecomment-109014369
-//  - https://github.com/imgix/imgix-blueprint#securing-urls
-func cgiEscape(s string) string {
-	return RegexUrlCharactersToEscape.ReplaceAllStringFunc(s, func(s string) string {
-		rune, _ := utf8.DecodeLastRuneInString(s)
-		return "%" + strings.ToUpper(fmt.Sprintf("%x", rune))
-	})
+	return encodePath(path)
 }
