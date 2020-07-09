@@ -76,7 +76,7 @@ func encodePath(path string) string {
 		escapedPath := url.QueryEscape(path[1:])
 		return "/" + escapedPath
 	}
-	return url.QueryEscape(path)
+	return "/" + url.QueryEscape(path)
 }
 
 // encodeQueryString encodes a set of params into a form that can be
