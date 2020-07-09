@@ -11,6 +11,8 @@ import (
 // validate the domain. Elsewhere we use a regex to filter invalid
 // domains. However, the same regex won't work in this case as Go
 // does not support positive look-a-heads (i.e. `(?=)`).
+// TODO: Discuss. Go doesn't support positive look-a-heads so our
+// domain regex won't work here. I will explore regex alternatives.
 func validateDomain(domain string) (string, error) {
 	if strings.HasPrefix(domain, "http") {
 		u, err := url.Parse(domain)

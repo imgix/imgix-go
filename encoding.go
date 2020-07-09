@@ -16,6 +16,8 @@ import (
 // prefixed by a percent-encoded prefix. If it is, we know that it's
 // a proxy and that it's percent-encoded. Finally, if the path isn't
 // prefixed by any of these four prefixes, it is not a valid proxy.
+// TODO: Discuss whether or not we want to do this or if we only
+// want to handle ascii prefixes.
 func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
 	path := p
 	if strings.HasPrefix(p, "/") {
@@ -49,6 +51,9 @@ func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
 //
 // See:
 // https://golang.org/src/net/url/url.go?s=7851:7884#L137
+// TODO: Discuss. PathEscape seems to be more aggressive at escaping
+// than some of the other functions used in the kit. Is this behavior
+// okay?
 func encodeProxy(proxyPath string, isEncoded bool) (escapedProxyPath string) {
 	if isEncoded {
 		return proxyPath
@@ -70,7 +75,9 @@ func encodeProxy(proxyPath string, isEncoded bool) (escapedProxyPath string) {
 // encodePath uses url.PathEscape to encode the given path string into
 // a form that can be safely placed inside a URL path segment. If the
 // path is prefixed with a '/', the path is processed without it. The
-// '/' is then added to the escaped path.
+// '/' is then added to the escaped path. The path passed to this func
+// should be prefixed with a '/', but if it isn't this function produces
+// the same output.
 func encodePath(path string) string {
 	if strings.HasPrefix(path, "/") {
 		escapedPath := url.QueryEscape(path[1:])
@@ -107,6 +114,9 @@ func encodeQueryParam(key string, values []string) (eK string, eV string) {
 	eK = encodeQueryParamValue(key)
 
 	valuesLength := len(values)
+
+	// If there are multiple values, then join them together
+	// and then treat them as a single value.
 	var value string
 	if valuesLength > 1 {
 		value = strings.Join(values, ",")
@@ -173,16 +183,18 @@ func unPad(s string) string {
 // createMd5Signature creates the signature by joining the token, path, and params
 // strings into a signatureBase. Next, create a hashedSig and write the
 // signatureBase into it. Finally, return the encoded, signed string.
-func createMd5Signature(token string, path string, params string) string {
+func createMd5Signature(token string, path string, query string) string {
 	var delim string
 
-	if params == "" {
+	if query == "" {
 		delim = ""
 	} else {
 		delim = "?"
 	}
 
-	signatureBase := strings.Join([]string{token, path, delim, params}, "")
+	// The expected signature base has the form:
+	// {TOKEN}{PATH}{DELIM}{QUERY}
+	signatureBase := strings.Join([]string{token, path, delim, query}, "")
 	hashedSig := md5.New()
 	hashedSig.Write([]byte(signatureBase))
 	return hex.EncodeToString(hashedSig.Sum(nil))
