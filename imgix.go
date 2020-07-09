@@ -1,6 +1,7 @@
 package imgix
 
 import (
+	"log"
 	"net/url"
 	"strings"
 )
@@ -19,7 +20,7 @@ type URLBuilder struct {
 func NewURLBuilder(domain string) URLBuilder {
 	validDomain, err := validateDomain(domain)
 	if err != nil {
-		// Do something
+		log.Fatal(err)
 	}
 	return URLBuilder{domain: validDomain, useHTTPS: true, useLibParam: true}
 }
@@ -29,7 +30,7 @@ func NewURLBuilder(domain string) URLBuilder {
 func NewSecureURLBuilder(domain string, token string) URLBuilder {
 	validDomain, err := validateDomain(domain)
 	if err != nil {
-		// Do something
+		log.Fatal(err)
 	}
 	return URLBuilder{domain: validDomain, token: token, useHTTPS: true, useLibParam: true}
 }
