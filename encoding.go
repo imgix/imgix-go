@@ -58,9 +58,9 @@ func encodeProxy(proxyPath string, isEncoded bool) (escapedProxyPath string) {
 	// The proxyPath should be prefixed by this point, but if it isn't check
 	// and then do the right thing.
 	if strings.HasPrefix(proxyPath, "/") {
-		nearlyEscaped = "/" + url.QueryEscape(proxyPath[1:])
+		nearlyEscaped = "/" + url.PathEscape(proxyPath[1:])
 	} else {
-		nearlyEscaped = "/" + url.QueryEscape(proxyPath)
+		nearlyEscaped = "/" + url.PathEscape(proxyPath)
 	}
 
 	escapedProxyPath = strings.Replace(nearlyEscaped, ":", "%3A", -1)
