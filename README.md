@@ -50,7 +50,7 @@ import (
 
 func main() {
     ub := NewURLBuilder("demo.imgix.net")
-    ixUrl := ub.CreateURL("path/to/image.jpg", url.Values{}))
+    ixUrl := ub.CreateURL("path/to/image.jpg", url.Values{})
     // ixUrl == "https://demo.imgix.net/path/to/image.jpg"
 }
 ```
