@@ -110,7 +110,7 @@ func main() {
 
 ## Srcset Generation
 
-The imgix-python package allows for generation of custom srcset attributes, which can be invoked through the `CreateSrcSet` method. By default, the generated srcset will allow for responsive size switching by building a list of image-width mappings.
+The imgix-go package allows for generation of custom srcset attributes, which can be invoked through the `CreateSrcSet` method. By default, the generated srcset will allow for responsive size switching by building a list of image-width mappings.
 
 ```go
 ub := NewURLBuilderWithToken("demos.imgix.net", token)
