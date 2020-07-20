@@ -37,7 +37,7 @@ go get github.com/imgix/imgix-go
 <!-- Usage Instructions -->
 ## Usage
 
-To begin creating imgix URLs, import the imgix library and create a URL builder. The URL builder can be reused to create URLs for any images on the domains it is provided.
+To begin creating imgix URLs, import the imgix library and create a URL builder. The URL builder can be reused to create URLs for any images on the domain it is provided.
 
 ```go
 package main
