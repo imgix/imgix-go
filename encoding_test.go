@@ -78,14 +78,14 @@ func TestEncoding_checkProxyStatusAscii(t *testing.T) {
 
 func TestEncoding_encodePathProxyEncoded(t *testing.T) {
 	const expected = "/http%3A%2F%2Fwww.this.com%2Fpic.jpg"
-	actual := processPath(expected)
+	actual := sanitizePath(expected)
 	assert.Equal(t, expected, actual)
 }
 
 func TestEncoding_encodePathProxyRaw(t *testing.T) {
 	const proxyPath = "http://www.this.com/pic.jpg"
 	const expected = "/http%3A%2F%2Fwww.this.com%2Fpic.jpg"
-	actual := processPath(proxyPath)
+	actual := sanitizePath(proxyPath)
 
 	assert.Equal(t, expected, actual)
 }

@@ -78,7 +78,7 @@ func (b *URLBuilder) SetToken(token string) {
 func (b *URLBuilder) CreateURL(path string, params url.Values) string {
 	scheme := b.Scheme()
 	domain := b.Domain()
-	path = processPath(path)
+	path = sanitizePath(path)
 	query := b.buildQueryString(params)
 	signature := b.sign(path, query)
 
@@ -130,7 +130,7 @@ func (b *URLBuilder) sign(path string, query string) string {
 
 // processPath processes a path string into a form that can be
 // safely used in a URL path segment.
-func processPath(path string) string {
+func sanitizePath(path string) string {
 	if path == "" {
 		return path
 	}
