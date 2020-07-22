@@ -44,16 +44,11 @@ func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
 // The proxy-path is nearly escaped for our use-case after the call
 // to PathEscape.
 //
-// Per net/url, PathEscape enters the shouldEscape function with the
-// mode set to encodePathSegment. This means that COLON (:) will be
-// considered unreserved and make it into the escaped path segment.
-// It also means that '/', ';', ',', and '?' will be escaped.
+// Due to the way PathEscape works, we have to go back and percent
+// encode colon characters (i.e. ':' to "%3A").
 //
 // See:
 // https://golang.org/src/net/url/url.go?s=7851:7884#L137
-// TODO: Discuss. PathEscape seems to be more aggressive at escaping
-// than some of the other functions used in the kit. Is this behavior
-// okay?
 func encodeProxy(proxyPath string, isEncoded bool) (escapedProxyPath string) {
 	if isEncoded {
 		return proxyPath
@@ -72,12 +67,10 @@ func encodeProxy(proxyPath string, isEncoded bool) (escapedProxyPath string) {
 	return escapedProxyPath
 }
 
-// encodePath uses url.PathEscape to encode the given path string into
-// a form that can be safely placed inside a URL path segment. If the
-// path is prefixed with a '/', the path is processed without it. The
-// '/' is then added to the escaped path. The path passed to this func
-// should be prefixed with a '/', but if it isn't this function produces
-// the same output.
+// encodePath uses splitAndEscape to encode the given path string into
+// a form that can be safely placed inside a URL path segment. The path
+// passed to this func should be prefixed with a '/', but if it isn't
+// this function produces the same output.
 func encodePath(path string) string {
 	if strings.HasPrefix(path, "/") {
 		escapedPath := splitAndEscape(path[1:])
@@ -86,6 +79,10 @@ func encodePath(path string) string {
 	return "/" + splitAndEscape(path)
 }
 
+// splitAndEscape splits the path on forward slash characters,
+// PathEscape's each component, replaces any '+' with "%2B", then
+// appends this escaped component to the results array. The result
+// is then joined together using '/' as the delimeter.
 func splitAndEscape(path string) string {
 	if path == "" {
 		return path
@@ -150,17 +147,9 @@ func encodeQueryParam(key string, values []string) (eK string, eV string) {
 	return eK, eV
 }
 
-// encodeQueryParamValue encodes a query parameter value by first
-// replacing all PLUS (+) characters with their escaped form, '%2B'.
-// The value with escaped PLUS signs is passed to QueryEscape
-// which escapes "everything." This function aggressively escapes PLUS
-// (+) as SPACE and substitutes '%20' (for PLUS) and this is why we
-// attempt to preserve PLUS (+) characters first, then escape the
-// query, and then go back through and replace all the PLUS (+) signs
-// which Go's net/url module prefers.
-//
-// See:
-// https://golang.org/src/net/url/url.go?s=7851:7884#L149
+// encodeQueryParamValue uses url.QueryEscape to escape the queryValue
+// into a form that is safe to use in URLs. Note that net/url uses
+// plus (+) as SPACE and does not percent-encode '+' to "%20".
 func encodeQueryParamValue(queryValue string) string {
 	return url.QueryEscape(queryValue)
 }
