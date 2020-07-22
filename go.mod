@@ -4,5 +4,5 @@ go 1.14
 
 require (
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/tools v0.0.0-20200721223218-6123e77877b2 // indirect
+	golang.org/x/tools v0.0.0-20200722181740-bd1e9de8d890 // indirect
 )
