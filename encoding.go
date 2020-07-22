@@ -96,7 +96,7 @@ func splitAndEscape(path string) string {
 
 	for _, component := range splitPath {
 		c := url.PathEscape(component)
-		pathEscaped := strings.ReplaceAll(c, "+", "%2B")
+		pathEscaped := strings.Replace(c, "+", "%2B", -1)
 		result = append(result, pathEscaped)
 	}
 
