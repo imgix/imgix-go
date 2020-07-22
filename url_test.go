@@ -87,12 +87,14 @@ func TestURL_BluePrintSigning(t *testing.T) {
 func TestURL_BluePrintSigningWithParams(t *testing.T) {
 	u := NewSecureURLBuilder("my-social-network.imgix.net", "FOO123bar")
 	u.SetUseLibParam(false)
-	expected := "https://my-social-network.imgix.net/users%2F1.png?h=300&w=400&s=1e35d52f5876f10023f88f82043bcdda"
+	expected := "https://my-social-network.imgix.net/users/1.png?h=300&w=400&s=1a4e48641614d1109c6a7af51be23d18"
 	params := url.Values{"h": []string{"300"}, "w": []string{"400"}}
 
 	actualPathPrefixed := u.CreateURL("/users/1.png", params)
 	assert.Equal(t, expected, actualPathPrefixed)
 
+	// The only difference between this and the above is that
+	// the below is not prefixed with a slash.
 	actual := u.CreateURL("users/1.png", params)
 	assert.Equal(t, expected, actual)
 }

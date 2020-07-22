@@ -80,10 +80,27 @@ func encodeProxy(proxyPath string, isEncoded bool) (escapedProxyPath string) {
 // the same output.
 func encodePath(path string) string {
 	if strings.HasPrefix(path, "/") {
-		escapedPath := url.QueryEscape(path[1:])
+		escapedPath := splitAndEscape(path[1:])
 		return "/" + escapedPath
 	}
-	return "/" + url.QueryEscape(path)
+	return "/" + splitAndEscape(path)
+}
+
+func splitAndEscape(path string) string {
+	if path == "" {
+		return path
+	}
+
+	var result []string
+	splitPath := strings.Split(path, "/")
+
+	for _, component := range splitPath {
+		c := url.PathEscape(component)
+		pathEscaped := strings.ReplaceAll(c, "+", "%2B")
+		result = append(result, pathEscaped)
+	}
+
+	return strings.Join(result, "/")
 }
 
 // encodeQueryString encodes a set of params into a form that can be
