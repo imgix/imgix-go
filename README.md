@@ -235,7 +235,7 @@ The `TargetWidths` function is used internally to generate lists of target width
 
 It is a way to generate, play with, and explore different target widths separately from srcset attributes. We've already seen how to generate srcset attributes when the begin, end, and tolerance values are known.
 
-Another approach is to use `TargetWidths` to determine which combination of values for `start`, `end`, and `tol`erance work best.
+Another approach is to use `TargetWidths` to determine which combination of values for `start`, `end`, and `tol` works best.
 
 ```go
 // Create
