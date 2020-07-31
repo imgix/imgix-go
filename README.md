@@ -117,7 +117,7 @@ ub := NewURLBuilderWithToken("demos.imgix.net", token)
 srcset := ub.CreateSrcSet("image.png", url.Values{}, DefaultOpts)
 ```
 
-The above will produce a srcset the following srcset attribute value which can then be served to the client: 
+The above will produce the following srcset attribute value, which can then be served to the client: 
 
 ``` html
 https://demos.imgix.net/image.png?w=100&s=9abb0d0db5a4901fcb6420a1a37efe5d 100w,
