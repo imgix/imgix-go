@@ -207,7 +207,7 @@ https://demo.imgix.net/image.png?w=380 380w
 
 #### Width Tolerance
 
-The `srcset` width `tol`erance dictates the maximum tolerated difference between an image's downloaded size and its rendered size.
+The `srcset` width tolerance (`tol`) dictates the maximum tolerated difference between an image's downloaded size and its rendered size.
 
 For example, setting this value to `0.10` means that an image will not render more than 10% larger or smaller than its native size. In practice, the image URLs generated for a width-based srcset attribute will grow by twice this rate.
 
