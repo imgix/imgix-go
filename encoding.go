@@ -16,8 +16,6 @@ import (
 // prefixed by a percent-encoded prefix. If it is, we know that it's
 // a proxy and that it's percent-encoded. Finally, if the path isn't
 // prefixed by any of these four prefixes, it is not a valid proxy.
-// TODO: Discuss whether or not we want to do this or if we only
-// want to handle ascii prefixes.
 func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
 	path := p
 	if strings.HasPrefix(p, "/") {
