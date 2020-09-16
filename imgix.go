@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const ixLibVersion = "go-v0.0.0"
+const ixLibVersion = "go-v2.0.0"
 
 // URLBuilder facilitates the building of URLs.
 type URLBuilder struct {
