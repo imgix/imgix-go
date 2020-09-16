@@ -16,23 +16,58 @@ type URLBuilder struct {
 	useLibParam bool
 }
 
+type Opts = map[string]string
+
 // NewURLBuilder creates a new URLBuilder with the given domain, with HTTPS enabled.
-func NewURLBuilder(domain string) URLBuilder {
+func NewURLBuilder(domain string, options map[string]string) URLBuilder {
 	validDomain, err := validateDomain(domain)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return URLBuilder{domain: validDomain, useHTTPS: true, useLibParam: true}
+
+	useLibParam := true
+	useHTTPS := true
+
+	for k, v := range options {
+		if k == "useLibParam" && v == "false" {
+			useLibParam = false
+		}
+
+		if k == "useHTTPS" && v == "false" {
+			useHTTPS = false
+		}
+	}
+
+	return URLBuilder{domain: validDomain, useHTTPS: useHTTPS, useLibParam: useLibParam}
 }
 
 // NewSecureURLBuilder creates a new URLBuilder with the given domain and token
 // with HTTPS enabled.
-func NewSecureURLBuilder(domain string, token string) URLBuilder {
+func NewSecureURLBuilder(domain string, token string, options map[string]string) URLBuilder {
 	validDomain, err := validateDomain(domain)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return URLBuilder{domain: validDomain, token: token, useHTTPS: true, useLibParam: true}
+
+	useLibParam := true
+	useHTTPS := true
+
+	for k, v := range options {
+		if k == "useLibParam" && v == "false" {
+			useLibParam = false
+		}
+
+		if k == "useHTTPS" && v == "false" {
+			useHTTPS = false
+		}
+	}
+
+	return URLBuilder{
+		domain:      validDomain,
+		token:       token,
+		useHTTPS:    useHTTPS,
+		useLibParam: useLibParam,
+	}
 }
 
 // UseHTTPS returns whether HTTPS or HTTP should be used.

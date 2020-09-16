@@ -8,16 +8,15 @@ import (
 )
 
 func testClient() URLBuilder {
-	return NewURLBuilder("test.imgix.net")
+	return NewURLBuilder("test.imgix.net", Opts{"useLibParam": "false"})
 }
 
 func testClientWithToken() URLBuilder {
-	return NewSecureURLBuilder("my-social-network.imgix.net", "FOO123bar")
+	return NewSecureURLBuilder("my-social-network.imgix.net", "FOO123bar", Opts{})
 }
 
 func TestURLBuilder_CreateSrcSetFromWidths(t *testing.T) {
 	c := testClient()
-	c.SetUseLibParam(false)
 	actual := c.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
 	expected := "https://test.imgix.net/image.jpg?w=100 100w,\n" +
 		"https://test.imgix.net/image.jpg?w=200 200w,\n" +
@@ -28,6 +27,7 @@ func TestURLBuilder_CreateSrcSetFromWidths(t *testing.T) {
 
 func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 	c := testClient()
+	// Example of setting the useLibParam after initial construction.
 	c.SetUseLibParam(false)
 	// For demonstration, the below is a longer version of the actual call:
 	// c.CreateSrcSetFromRange("image.png", url.Values{}, WidthRange{begin: 100, end: 380, tol: 0.08})
@@ -47,7 +47,6 @@ func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 
 func TestURLBuilder_CreateSrcSetFixedW(t *testing.T) {
 	c := testClient()
-	c.SetUseLibParam(false)
 	params := url.Values{"w": []string{"320"}}
 	options := SrcSetOpts{disableVariableQuality: false}
 	expected := "https://test.imgix.net/image.png?dpr=1&q=75&w=320 1x,\n" +
@@ -61,7 +60,6 @@ func TestURLBuilder_CreateSrcSetFixedW(t *testing.T) {
 
 func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 	c := testClient()
-	c.SetUseLibParam(false)
 	params := url.Values{"h": []string{"320"}, "ar": []string{"4:3"}}
 	options := SrcSetOpts{disableVariableQuality: false}
 	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=320&q=75 1x,\n" +
@@ -75,7 +73,6 @@ func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 
 func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
 	c := testClient()
-	c.SetUseLibParam(false)
 	wr := WidthRange{100, 8192, 1000.0}
 	options := SrcSetOpts{widthRange: wr}
 
@@ -88,7 +85,6 @@ func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
 
 func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 	c := testClient()
-	c.SetUseLibParam(false)
 	wr := WidthRange{100, 108, 0.02}
 	config := SrcSetOpts{widthRange: wr}
 
@@ -102,7 +98,6 @@ func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 
 func TestURLBuilder_CreateSrcSetQoverridesDisableVarQuality(t *testing.T) {
 	c := testClient()
-	c.SetUseLibParam(false)
 	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}, "q": []string{"99"}}
 	options := SrcSetOpts{disableVariableQuality: true}
 	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=99 1x,\n" +
