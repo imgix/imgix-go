@@ -16,6 +16,10 @@ type URLBuilder struct {
 	useLibParam bool
 }
 
+// Opts is a type alias for map[string]string. It exists to provide a more
+// convenient alternative to passing map[string]string each time a URLBuilder
+// is constructed. It is also more convenient to pass Opts{} in the event
+// no options must be specified to the builder.
 type Opts = map[string]string
 
 // NewURLBuilder creates a new URLBuilder with the given domain, with HTTPS enabled.
