@@ -18,7 +18,7 @@ func TestReadMe_SignedSrcSetCreation(t *testing.T) {
 	ixToken := os.Getenv(key)
 	assert.Equal(t, value, ixToken)
 
-	ub := NewSecureURLBuilder("demos.imgix.net", ixToken)
+	ub := NewSecureURLBuilder("demos.imgix.net", ixToken, Opts{})
 	ub.SetUseLibParam(false)
 	srcset := ub.CreateSrcSet("image.png", url.Values{}, DefaultOpts)
 
@@ -34,7 +34,7 @@ func TestReadMe_SignedSrcSetCreation(t *testing.T) {
 }
 
 func TestReadMe_FixedWidthSrcSetDefault(t *testing.T) {
-	ub := NewURLBuilder("demo.imgix.net")
+	ub := NewURLBuilder("demo.imgix.net", Opts{})
 	ub.SetUseLibParam(false)
 	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}}
 	options := SrcSetOpts{disableVariableQuality: false}
@@ -48,7 +48,7 @@ func TestReadMe_FixedWidthSrcSetDefault(t *testing.T) {
 }
 
 func TestReadMe_FixedWidthSrcSetVariableQualityDisabled(t *testing.T) {
-	ub := NewURLBuilder("demo.imgix.net")
+	ub := NewURLBuilder("demo.imgix.net", Opts{})
 	ub.SetUseLibParam(false)
 	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}}
 	options := SrcSetOpts{disableVariableQuality: true}
@@ -62,7 +62,7 @@ func TestReadMe_FixedWidthSrcSetVariableQualityDisabled(t *testing.T) {
 }
 
 func TestReadMe_FixedWidthSrcSetNoOpts(t *testing.T) {
-	ub := NewURLBuilder("demo.imgix.net")
+	ub := NewURLBuilder("demo.imgix.net", Opts{})
 	ub.SetUseLibParam(false)
 	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}}
 	expected := "https://demo.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=75 1x,\n" +
@@ -75,7 +75,7 @@ func TestReadMe_FixedWidthSrcSetNoOpts(t *testing.T) {
 }
 
 func TestReadMe_FluidWidthSrcSetFromWidths(t *testing.T) {
-	ub := NewURLBuilder("demo.imgix.net")
+	ub := NewURLBuilder("demo.imgix.net", Opts{})
 	ub.SetUseLibParam(false)
 	actual := ub.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
 	expected := "https://demo.imgix.net/image.jpg?w=100 100w,\n" +
@@ -86,7 +86,7 @@ func TestReadMe_FluidWidthSrcSetFromWidths(t *testing.T) {
 }
 
 func TestReadMe_FluidWidthSrcSetFromSrcSetOpts(t *testing.T) {
-	ub := NewURLBuilder("demo.imgix.net")
+	ub := NewURLBuilder("demo.imgix.net", Opts{})
 	ub.SetUseLibParam(false)
 	options := SrcSetOpts{widthRange: WidthRange{begin: 100, end: 380, tol: 0.08}}
 	actual := ub.CreateSrcSet("image.png", url.Values{}, options)
@@ -104,7 +104,7 @@ func TestReadMe_FluidWidthSrcSetFromSrcSetOpts(t *testing.T) {
 }
 
 func TestReadMe_FluidWidthSrcSetFromSrcSetOptsTol20(t *testing.T) {
-	ub := NewURLBuilder("demo.imgix.net")
+	ub := NewURLBuilder("demo.imgix.net", Opts{})
 	ub.SetUseLibParam(false)
 	options := SrcSetOpts{widthRange: WidthRange{begin: 100, end: 384, tol: 0.20}}
 	actual := ub.CreateSrcSet("image.png", url.Values{}, options)
@@ -133,7 +133,7 @@ func TestReadMe_TargetWidths(t *testing.T) {
 	expectedLg := []int{1513, 1906, 2401, 3000}
 	assert.Equal(t, expectedLg, lg)
 
-	ub := NewURLBuilder("demos.imgix.net")
+	ub := NewURLBuilder("demos.imgix.net", Opts{})
 	ub.SetUseLibParam(false)
 	srcset := ub.CreateSrcSetFromWidths("image.png", url.Values{}, sm)
 	actualSrcset := "https://demos.imgix.net/image.png?w=300 300w,\n" +
