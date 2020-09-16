@@ -70,11 +70,13 @@ ub.CreateURL("path/to/image.jpg", url.Values{})
 // "http://demo.imgix.net/path/to/image.jpg"
 ```
 
-## Signed URLs
+## Secure and Sign URLs
 
-To produce a signed URL, you must enable secure URLs on your source and then provide your signature key to the URL builder.
+To produce a secure URL, you must enable [Secure URLs](https://docs.imgix.com/setup/securing-images#enabling-secure-urls) on your source and then provide your token to the URL builder. The builder will use this token to sign your URL––securing the URL against tampering or alterations made by anyone without access to your token.
 
-First, be sure to keep your secrets safe.
+Note that due to the way signing secures URLs by "locking" them in their generated state, it's required that a URL be re-signed and secured after any modifications (e.g. updating parameters, path, etc.). Fortunately, our SDK will handle re-signing automatically.
+
+First, be sure to keep your token a secret.
 
 **.env**
 ```text
