@@ -29,9 +29,14 @@ func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 	c := testClient()
 	// Example of setting the useLibParam after initial construction.
 	c.SetUseLibParam(false)
-	// For demonstration, the below is a longer version of the actual call:
-	// c.CreateSrcSetFromRange("image.png", url.Values{}, WidthRange{begin: 100, end: 380, tol: 0.08})
-	actual := c.CreateSrcSetFromRange("image.png", url.Values{}, WidthRange{100, 380, 0.08})
+
+	actual := c.CreateSrcSet(
+		"image.png",
+		url.Values{},
+		WithMinWidth(100),
+		WithMaxWidth(380),
+		WithTolerance(0.08))
+
 	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
 		"https://test.imgix.net/image.png?w=116 116w,\n" +
 		"https://test.imgix.net/image.png?w=135 135w,\n" +
@@ -42,69 +47,77 @@ func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 		"https://test.imgix.net/image.png?w=283 283w,\n" +
 		"https://test.imgix.net/image.png?w=328 328w,\n" +
 		"https://test.imgix.net/image.png?w=380 380w"
+
 	assert.Equal(t, expected, actual)
 }
 
 func TestURLBuilder_CreateSrcSetFixedW(t *testing.T) {
 	c := testClient()
 	params := url.Values{"w": []string{"320"}}
-	options := SrcSetOpts{disableVariableQuality: false}
 	expected := "https://test.imgix.net/image.png?dpr=1&q=75&w=320 1x,\n" +
 		"https://test.imgix.net/image.png?dpr=2&q=50&w=320 2x,\n" +
 		"https://test.imgix.net/image.png?dpr=3&q=35&w=320 3x,\n" +
 		"https://test.imgix.net/image.png?dpr=4&q=23&w=320 4x,\n" +
 		"https://test.imgix.net/image.png?dpr=5&q=20&w=320 5x"
-	actual := c.CreateSrcSet("image.png", params, options)
+	actual := c.CreateSrcSet("image.png", params)
 	assert.Equal(t, expected, actual)
 }
 
 func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 	c := testClient()
 	params := url.Values{"h": []string{"320"}, "ar": []string{"4:3"}}
-	options := SrcSetOpts{disableVariableQuality: false}
 	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=320&q=75 1x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=320&q=50 2x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=320&q=35 3x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=320&q=23 4x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=320&q=20 5x"
-	actual := c.CreateSrcSet("image.png", params, options)
+	actual := c.CreateSrcSet("image.png", params, WithVariableQuality(true))
 	assert.Equal(t, expected, actual)
 }
 
 func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
 	c := testClient()
-	wr := WidthRange{100, 8192, 1000.0}
-	options := SrcSetOpts{widthRange: wr}
 
 	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
 		"https://test.imgix.net/image.png?w=8192 8192w"
 
-	actual := c.CreateSrcSet("image.png", url.Values{}, options)
+	actual := c.CreateSrcSet(
+		"image.png",
+		url.Values{},
+		WithMinWidth(100),
+		WithMaxWidth(8192),
+		WithTolerance(1000.0))
+
 	assert.Equal(t, expected, actual)
 }
 
 func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 	c := testClient()
-	wr := WidthRange{100, 108, 0.02}
-	config := SrcSetOpts{widthRange: wr}
 
 	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
 		"https://test.imgix.net/image.png?w=104 104w,\n" +
 		"https://test.imgix.net/image.png?w=108 108w"
 
-	actual := c.CreateSrcSet("image.png", url.Values{}, config)
+	actual := c.CreateSrcSet(
+		"image.png",
+		url.Values{},
+		WithMinWidth(100),
+		WithMaxWidth(108),
+		WithTolerance(0.02))
+
 	assert.Equal(t, expected, actual)
 }
 
-func TestURLBuilder_CreateSrcSetQoverridesDisableVarQuality(t *testing.T) {
+func TestURLBuilder_CreateSrcSetQoverridesUsingVariableQuality(t *testing.T) {
 	c := testClient()
 	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}, "q": []string{"99"}}
-	options := SrcSetOpts{disableVariableQuality: true}
+
 	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=99 1x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=800&q=99 2x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=800&q=99 3x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=99 4x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=99 5x"
-	actual := c.CreateSrcSet("image.png", params, options)
+
+	actual := c.CreateSrcSet("image.png", params, WithVariableQuality(false))
 	assert.Equal(t, expected, actual)
 }

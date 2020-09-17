@@ -66,6 +66,39 @@ var DefaultOpts = SrcSetOpts{
 	disableVariableQuality: false,
 }
 
+type SrcsetOpts struct {
+	minWidth        int
+	maxWidth        int
+	tolerance       float64
+	variableQuality bool
+}
+
+type SrcsetOption func(opt *SrcsetOpts)
+
+func WithMinWidth(minWidth int) SrcsetOption {
+	return func(s *SrcsetOpts) {
+		s.minWidth = minWidth
+	}
+}
+
+func WithMaxWidth(maxWidth int) SrcsetOption {
+	return func(s *SrcsetOpts) {
+		s.maxWidth = maxWidth
+	}
+}
+
+func WithTolerance(tolerance float64) SrcsetOption {
+	return func(s *SrcsetOpts) {
+		s.tolerance = tolerance
+	}
+}
+
+func WithVariableQuality(variableQuality bool) SrcsetOption {
+	return func(s *SrcsetOpts) {
+		s.variableQuality = variableQuality
+	}
+}
+
 // CreateSrcSet creates a srcset attribute string. Given a path, set of
 // parameters, and a set of SrcSetOpts, this function infers which kind
 // of srcset attribute to create.
@@ -80,7 +113,21 @@ var DefaultOpts = SrcSetOpts{
 // Otherwise, this function will create a fluid-width srcset attribute
 // wherein each URL (or image candidate string) is described by a width
 // in the specified WidthRange.
-func (b *URLBuilder) CreateSrcSet(path string, params url.Values, opts SrcSetOpts) string {
+func (b *URLBuilder) CreateSrcSet(
+	path string,
+	params url.Values,
+	options ...SrcsetOption) string {
+
+	opts := SrcsetOpts{
+		minWidth:        minWidth,
+		maxWidth:        maxWidth,
+		tolerance:       tolerance,
+		variableQuality: true}
+
+	for _, fn := range options {
+		fn(&opts)
+	}
+
 	// Check params contains a width (w) or height (h) _and_ aspect ratio (ar);
 	hasWidth := params.Get("w") != ""
 	hasHeight := params.Get("h") != ""
@@ -89,15 +136,12 @@ func (b *URLBuilder) CreateSrcSet(path string, params url.Values, opts SrcSetOpt
 	// If params has either a width or _both_ height and aspect ratio,
 	// build a dpr-based srcset attribute.
 	if hasWidth || (hasHeight && hasAspectRatio) {
-		return b.buildSrcSetDpr(path, params, opts.disableVariableQuality)
+		return b.buildSrcSetDpr(path, params, opts.variableQuality)
 	}
 
 	// Otherwise, get the widthRange values from the opts and build a
 	// width-pairs based srcset attribute.
-	begin := opts.widthRange.begin
-	end := opts.widthRange.end
-	tol := opts.widthRange.tol
-	targets := TargetWidths(begin, end, tol)
+	targets := TargetWidths(opts.minWidth, opts.maxWidth, opts.tolerance)
 	return b.buildSrcSetPairs(path, params, targets)
 }
 
@@ -132,7 +176,7 @@ func (b *URLBuilder) buildSrcSetPairs(path string, params url.Values, targets []
 	return strings.Join(srcSetEntries, ",\n")
 }
 
-func (b *URLBuilder) buildSrcSetDpr(path string, params url.Values, disableVariableQuality bool) string {
+func (b *URLBuilder) buildSrcSetDpr(path string, params url.Values, useVariableQuality bool) string {
 	var DprQualities = map[string]string{"1": "75", "2": "50", "3": "35", "4": "23", "5": "20"}
 	var srcSetEntries []string
 
@@ -147,7 +191,7 @@ func (b *URLBuilder) buildSrcSetDpr(path string, params url.Values, disableVaria
 
 		// If variable quality is disabled, then first try to get
 		// any `q` param
-		if disableVariableQuality {
+		if !useVariableQuality {
 			qValue := params.Get("q")
 			if qValue != "" {
 				params.Set("q", qValue)
