@@ -16,61 +16,38 @@ type URLBuilder struct {
 	useLibParam bool
 }
 
-// Opts is a type alias for map[string]string. It exists to provide a more
-// convenient alternative to passing map[string]string each time a URLBuilder
-// is constructed. It is also more convenient to pass Opts{} in the event
-// no options must be specified to the builder.
-type Opts = map[string]string
+type BuilderOption func(b *URLBuilder)
 
 // NewURLBuilder creates a new URLBuilder with the given domain, with HTTPS enabled.
-func NewURLBuilder(domain string, options map[string]string) URLBuilder {
+func NewURLBuilder(domain string, options ...BuilderOption) URLBuilder {
 	validDomain, err := validateDomain(domain)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	useLibParam := true
-	useHTTPS := true
+	urlBuilder := URLBuilder{domain: validDomain, useHTTPS: true, useLibParam: true}
 
-	for k, v := range options {
-		if k == "useLibParam" && v == "false" {
-			useLibParam = false
-		}
-
-		if k == "useHTTPS" && v == "false" {
-			useHTTPS = false
-		}
+	for _, fn := range options {
+		fn(&urlBuilder)
 	}
-
-	return URLBuilder{domain: validDomain, useHTTPS: useHTTPS, useLibParam: useLibParam}
+	return urlBuilder
 }
 
-// NewSecureURLBuilder creates a new URLBuilder with the given domain and token
-// with HTTPS enabled.
-func NewSecureURLBuilder(domain string, token string, options map[string]string) URLBuilder {
-	validDomain, err := validateDomain(domain)
-	if err != nil {
-		log.Fatal(err)
+func WithToken(token string) BuilderOption {
+	return func(b *URLBuilder) {
+		b.token = token
 	}
+}
 
-	useLibParam := true
-	useHTTPS := true
-
-	for k, v := range options {
-		if k == "useLibParam" && v == "false" {
-			useLibParam = false
-		}
-
-		if k == "useHTTPS" && v == "false" {
-			useHTTPS = false
-		}
+func WithHTTPS(useHTTPS bool) BuilderOption {
+	return func(b *URLBuilder) {
+		b.useHTTPS = useHTTPS
 	}
+}
 
-	return URLBuilder{
-		domain:      validDomain,
-		token:       token,
-		useHTTPS:    useHTTPS,
-		useLibParam: useLibParam,
+func WithLibParam(useLibParam bool) BuilderOption {
+	return func(b *URLBuilder) {
+		b.useLibParam = useLibParam
 	}
 }
 
