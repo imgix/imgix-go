@@ -9,7 +9,7 @@ import (
 
 func TestURL_DefaultBuilder(t *testing.T) {
 	const domain = "test.imgix.net"
-	u := NewURLBuilder(domain, map[string]string{})
+	u := NewURLBuilder(domain)
 
 	// Assert the builder uses HTTPS by default.
 	assert.Equal(t, true, u.useHTTPS)
@@ -22,7 +22,7 @@ func TestURL_DefaultBuilder(t *testing.T) {
 }
 
 func testBuilder() URLBuilder {
-	u := NewURLBuilder("test.imgix.net", Opts{"useLibParam": "false"})
+	u := NewURLBuilder("test.imgix.net", WithLibParam(false))
 	return u
 }
 
@@ -76,10 +76,7 @@ func TestURL_WithRepeatedParamValues(t *testing.T) {
 }
 
 func TestURL_BluePrintSigning(t *testing.T) {
-	u := NewSecureURLBuilder(
-		"my-social-network.imgix.net",
-		"FOO123bar",
-		Opts{})
+	u := NewURLBuilder("my-social-network.imgix.net", WithToken("FOO123bar"))
 	u.SetUseLibParam(false)
 	expected := "https://my-social-network.imgix.net/http%3A%2F%2Favatars.com%2Fjohn-smith.png?s=493a52f008c91416351f8b33d4883135"
 	actual := u.CreateURL("/http%3A%2F%2Favatars.com%2Fjohn-smith.png", url.Values{})
@@ -87,10 +84,11 @@ func TestURL_BluePrintSigning(t *testing.T) {
 }
 
 func TestURL_BluePrintSigningWithParams(t *testing.T) {
-	u := NewSecureURLBuilder(
+	u := NewURLBuilder(
 		"my-social-network.imgix.net",
-		"FOO123bar",
-		Opts{"useLibParam": "false"})
+		WithToken("FOO123bar"),
+		WithLibParam(false))
+
 	expected := "https://my-social-network.imgix.net/users/1.png?h=300&w=400&s=1a4e48641614d1109c6a7af51be23d18"
 	params := url.Values{"h": []string{"300"}, "w": []string{"400"}}
 
@@ -114,10 +112,10 @@ func TestURL_BluePrintSigningWithProblematicParams(t *testing.T) {
 }
 
 func TestURL_SigningFullyQualifiedWithParams(t *testing.T) {
-	u := NewSecureURLBuilder(
+	u := NewURLBuilder(
 		"my-social-network.imgix.net",
-		"FOO123bar",
-		Opts{"useLibParam": "false"})
+		WithToken("FOO123bar"),
+		WithLibParam(false))
 	expected := "https://my-social-network.imgix.net/http%3A%2F%2Favatars.com%2Fjohn-smith.png?h=300&w=400&s=a201fe1a3caef4944dcb40f6ce99e746"
 
 	params := url.Values{"w": []string{"400"}, "h": []string{"300"}}

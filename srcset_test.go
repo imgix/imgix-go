@@ -8,11 +8,11 @@ import (
 )
 
 func testClient() URLBuilder {
-	return NewURLBuilder("test.imgix.net", Opts{"useLibParam": "false"})
+	return NewURLBuilder("test.imgix.net", WithLibParam(false))
 }
 
 func testClientWithToken() URLBuilder {
-	return NewSecureURLBuilder("my-social-network.imgix.net", "FOO123bar", Opts{})
+	return NewURLBuilder("my-social-network.imgix.net", WithToken("FOO123bar"))
 }
 
 func TestURLBuilder_CreateSrcSetFromWidths(t *testing.T) {
