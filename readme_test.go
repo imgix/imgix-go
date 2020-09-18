@@ -8,6 +8,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestReadMe_main(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
+	actual := ub.CreateURL("path/to/image.jpg")
+	expected := "https://demo.imgix.net/path/to/image.jpg"
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_usageWithParams(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
+	actual := ub.CreateURL("path/to/image.jpg", Param("w", "320"), Param("auto", "format", "compress"))
+	expected := "https://demo.imgix.net/path/to/image.jpg?auto=format%2Ccompress&w=320"
+	assert.Equal(t, expected, actual)
+}
+
+func TestReadMe_usageSrcsetGeneration(t *testing.T) {
+	ub := NewURLBuilder("demos.imgix.net", WithToken("foo123"))
+	srcset := ub.CreateSrcSet("image.png", []IxParam{})
+	splitSrcset := strings.Split(srcset, "\n")
+	assert.Equal(t, len(splitSrcset), 31)
+}
+
 func TestReadMe_SignedSrcSetCreation(t *testing.T) {
 	// Instead of using dotenv, just set the environment variable directly.
 	const key = "IX_TOKEN"
@@ -41,7 +62,7 @@ func TestReadMe_FixedWidthSrcSetDefault(t *testing.T) {
 		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=3&h=800&q=35 3x,\n" +
 		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=23 4x,\n" +
 		"https://demo.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=20 5x"
-	actual := ub.CreateSrcSet("image.png", params, WithVariableQuality(true))
+	actual := ub.CreateSrcSet("image.png", params)
 	assert.Equal(t, expected, actual)
 }
 
@@ -71,15 +92,16 @@ func TestReadMe_FixedWidthSrcSetNoOpts(t *testing.T) {
 
 func TestReadMe_FluidWidthSrcSetFromWidths(t *testing.T) {
 	ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
-	actual := ub.CreateSrcSetFromWidths("image.jpg", []IxParam{}, []int{100, 200, 300, 400})
-	expected := "https://demo.imgix.net/image.jpg?w=100 100w,\n" +
-		"https://demo.imgix.net/image.jpg?w=200 200w,\n" +
-		"https://demo.imgix.net/image.jpg?w=300 300w,\n" +
-		"https://demo.imgix.net/image.jpg?w=400 400w"
+	ixParams := []IxParam{Param("mask", "ellipse")}
+	actual := ub.CreateSrcSetFromWidths("image.jpg", ixParams, []int{100, 200, 300, 400})
+	expected := "https://demo.imgix.net/image.jpg?mask=ellipse&w=100 100w,\n" +
+		"https://demo.imgix.net/image.jpg?mask=ellipse&w=200 200w,\n" +
+		"https://demo.imgix.net/image.jpg?mask=ellipse&w=300 300w,\n" +
+		"https://demo.imgix.net/image.jpg?mask=ellipse&w=400 400w"
 	assert.Equal(t, expected, actual)
 }
 
-func TestReadMe_FluidWidthSrcSetFromSrcSetOpts(t *testing.T) {
+func TestReadMe_FluidWidthSrcSet(t *testing.T) {
 	ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
 
 	actual := ub.CreateSrcSet(
@@ -102,15 +124,19 @@ func TestReadMe_FluidWidthSrcSetFromSrcSetOpts(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestReadMe_FluidWidthSrcSetFromSrcSetOptsTol20(t *testing.T) {
+func TestReadMe_FluidWidthSrcsetTolerance20(t *testing.T) {
 	ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
+
+	srcsetOptions := []SrcsetOption{
+		WithMinWidth(100),
+		WithMaxWidth(384),
+		WithTolerance(0.20),
+	}
 
 	actual := ub.CreateSrcSet(
 		"image.png",
 		[]IxParam{},
-		WithMinWidth(100),
-		WithMaxWidth(384),
-		WithTolerance(0.20))
+		srcsetOptions...)
 
 	expected := "https://demo.imgix.net/image.png?w=100 100w,\n" +
 		"https://demo.imgix.net/image.png?w=140 140w,\n" +

@@ -73,6 +73,20 @@ func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func TestURLBuilder_CreateSrcsetFixedHandARImplicitVarQuality(t *testing.T) {
+	// Same as above, but omitting WithVariableQuality(true) to show that variable
+	// quality is the implicit-default.
+	c := testClient()
+	params := []IxParam{Param("h", "320"), Param("ar", "4:3")}
+	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=320&q=75 1x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=320&q=50 2x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=320&q=35 3x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=320&q=23 4x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=320&q=20 5x"
+	actual := c.CreateSrcSet("image.png", params)
+	assert.Equal(t, expected, actual)
+}
+
 func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
 	c := testClient()
 
@@ -106,7 +120,21 @@ func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestURLBuilder_CreateSrcSetQoverridesUsingVariableQuality(t *testing.T) {
+func TestURLBuilder_CreateSrcsetQOverridesWithVariableQuality(t *testing.T) {
+	c := testClient()
+	params := []IxParam{Param("h", "800"), Param("ar", "4:3"), Param("q", "99")}
+
+	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=99 1x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=800&q=99 2x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=800&q=99 3x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=99 4x,\n" +
+		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=99 5x"
+
+	actual := c.CreateSrcSet("image.png", params, WithVariableQuality(true))
+	assert.Equal(t, expected, actual)
+}
+
+func TestURLBuilder_CreateSrcsetQOverridesWithoutVariableQuality(t *testing.T) {
 	c := testClient()
 	params := []IxParam{Param("h", "800"), Param("ar", "4:3"), Param("q", "99")}
 
