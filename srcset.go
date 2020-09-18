@@ -75,8 +75,14 @@ type SrcsetOption func(opt *SrcsetOpts)
 // in the specified WidthRange.
 func (b *URLBuilder) CreateSrcSet(
 	path string,
-	params url.Values,
+	params []IxParam,
 	options ...SrcsetOption) string {
+
+	urlParams := url.Values{}
+
+	for _, fn := range params {
+		fn(&urlParams)
+	}
 
 	opts := SrcsetOpts{
 		minWidth:        minWidth,
@@ -89,20 +95,20 @@ func (b *URLBuilder) CreateSrcSet(
 	}
 
 	// Check params contains a width (w) or height (h) _and_ aspect ratio (ar);
-	hasWidth := params.Get("w") != ""
-	hasHeight := params.Get("h") != ""
-	hasAspectRatio := params.Get("ar") != ""
+	hasWidth := urlParams.Get("w") != ""
+	hasHeight := urlParams.Get("h") != ""
+	hasAspectRatio := urlParams.Get("ar") != ""
 
 	// If params has either a width or _both_ height and aspect ratio,
 	// build a dpr-based srcset attribute.
 	if hasWidth || (hasHeight && hasAspectRatio) {
-		return b.buildSrcSetDpr(path, params, opts.variableQuality)
+		return b.buildSrcSetDpr(path, urlParams, opts.variableQuality)
 	}
 
 	// Otherwise, get the widthRange values from the opts and build a
 	// width-pairs based srcset attribute.
 	targets := TargetWidths(opts.minWidth, opts.maxWidth, opts.tolerance)
-	return b.buildSrcSetPairs(path, params, targets)
+	return b.buildSrcSetPairs(path, urlParams, targets)
 }
 
 func WithMinWidth(minWidth int) SrcsetOption {
@@ -131,8 +137,14 @@ func WithVariableQuality(variableQuality bool) SrcsetOption {
 
 // CreateSrcSetFromWidths takes a path, a set of params, and an array of widths
 // to create a srcset attribute with width-described URLs (image candidate strings).
-func (b *URLBuilder) CreateSrcSetFromWidths(path string, params url.Values, widths []int) string {
-	return b.buildSrcSetPairs(path, params, widths)
+func (b *URLBuilder) CreateSrcSetFromWidths(path string, params []IxParam, widths []int) string {
+	urlParams := url.Values{}
+
+	for _, fn := range params {
+		fn(&urlParams)
+	}
+
+	return b.buildSrcSetPairs(path, urlParams, widths)
 }
 
 // buildSrcSetPairs builds a srcset attribute string containing width-described
@@ -181,7 +193,7 @@ func (b *URLBuilder) buildSrcSetDpr(path string, params url.Values, useVariableQ
 // to create an image candidate string. For more information see:
 // https://html.spec.whatwg.org/multipage/images.html#srcset-attributes
 func (b *URLBuilder) createImageCandidateString(path string, params url.Values, suffix string) string {
-	return strings.Join([]string{b.CreateURL(path, params), " ", suffix}, "")
+	return strings.Join([]string{b.createURLFromValues(path, params), " ", suffix}, "")
 }
 
 // TargetWidths creates an array of integer image widths.

@@ -89,9 +89,62 @@ func (b *URLBuilder) SetToken(token string) {
 	b.token = token
 }
 
+type IxParam func(u *url.Values)
+
+func Param(k string, v ...string) IxParam {
+	return func(u *url.Values) {
+		for _, value := range v {
+			u.Add(k, value)
+		}
+	}
+}
+
 // CreateURL creates a URL string given a path and a set of
 // params.
-func (b *URLBuilder) CreateURL(path string, params url.Values) string {
+func (b *URLBuilder) CreateURL(path string, params ...IxParam) string {
+	urlParams := url.Values{}
+
+	for _, fn := range params {
+		fn(&urlParams)
+	}
+
+	scheme := b.Scheme()
+	domain := b.Domain()
+	path = sanitizePath(path)
+	query := b.buildQueryString(urlParams)
+	signature := b.sign(path, query)
+
+	url := scheme + "://" + domain + path
+
+	// If the query and signature are empty, return the url.
+	if query == "" && signature == "" {
+		return url
+	}
+
+	// If the signature is empty, but the query is not,
+	// return the url with the query appended.
+	if query != "" && signature == "" {
+		return url + "?" + query
+	}
+
+	// If the query is empty, but the signature is not,
+	// return the url with the signature appended.
+	if query == "" && signature != "" {
+		return url + "?" + signature
+	}
+
+	// If neither query nor signature is empty, append the
+	// query, then append the signature.
+	if query != "" && signature != "" {
+		url += "?" + query + "&" + signature
+	}
+
+	return url
+}
+
+// createURLFromValues functions like CreateURL except that
+// it accepts url.Values.
+func (b *URLBuilder) createURLFromValues(path string, params url.Values) string {
 	scheme := b.Scheme()
 	domain := b.Domain()
 	path = sanitizePath(path)

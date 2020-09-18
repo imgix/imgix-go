@@ -1,7 +1,6 @@
 package imgix
 
 import (
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,7 +16,7 @@ func testClientWithToken() URLBuilder {
 
 func TestURLBuilder_CreateSrcSetFromWidths(t *testing.T) {
 	c := testClient()
-	actual := c.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
+	actual := c.CreateSrcSetFromWidths("image.jpg", []IxParam{}, []int{100, 200, 300, 400})
 	expected := "https://test.imgix.net/image.jpg?w=100 100w,\n" +
 		"https://test.imgix.net/image.jpg?w=200 200w,\n" +
 		"https://test.imgix.net/image.jpg?w=300 300w,\n" +
@@ -32,7 +31,7 @@ func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 
 	actual := c.CreateSrcSet(
 		"image.png",
-		url.Values{},
+		[]IxParam{},
 		WithMinWidth(100),
 		WithMaxWidth(380),
 		WithTolerance(0.08))
@@ -53,19 +52,18 @@ func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 
 func TestURLBuilder_CreateSrcSetFixedW(t *testing.T) {
 	c := testClient()
-	params := url.Values{"w": []string{"320"}}
 	expected := "https://test.imgix.net/image.png?dpr=1&q=75&w=320 1x,\n" +
 		"https://test.imgix.net/image.png?dpr=2&q=50&w=320 2x,\n" +
 		"https://test.imgix.net/image.png?dpr=3&q=35&w=320 3x,\n" +
 		"https://test.imgix.net/image.png?dpr=4&q=23&w=320 4x,\n" +
 		"https://test.imgix.net/image.png?dpr=5&q=20&w=320 5x"
-	actual := c.CreateSrcSet("image.png", params)
+	actual := c.CreateSrcSet("image.png", []IxParam{Param("w", "320")})
 	assert.Equal(t, expected, actual)
 }
 
 func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 	c := testClient()
-	params := url.Values{"h": []string{"320"}, "ar": []string{"4:3"}}
+	params := []IxParam{Param("h", "320"), Param("ar", "4:3")}
 	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=320&q=75 1x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=320&q=50 2x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=320&q=35 3x,\n" +
@@ -83,7 +81,7 @@ func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
 
 	actual := c.CreateSrcSet(
 		"image.png",
-		url.Values{},
+		[]IxParam{},
 		WithMinWidth(100),
 		WithMaxWidth(8192),
 		WithTolerance(1000.0))
@@ -100,7 +98,7 @@ func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 
 	actual := c.CreateSrcSet(
 		"image.png",
-		url.Values{},
+		[]IxParam{},
 		WithMinWidth(100),
 		WithMaxWidth(108),
 		WithTolerance(0.02))
@@ -110,7 +108,7 @@ func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 
 func TestURLBuilder_CreateSrcSetQoverridesUsingVariableQuality(t *testing.T) {
 	c := testClient()
-	params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}, "q": []string{"99"}}
+	params := []IxParam{Param("h", "800"), Param("ar", "4:3"), Param("q", "99")}
 
 	expected := "https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=99 1x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=800&q=99 2x,\n" +
