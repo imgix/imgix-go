@@ -44,7 +44,6 @@ func TestURL_paramValuesAreEscaped(t *testing.T) {
 	key := "hello_world"
 	value := "/foo\"> <script>alert(\"hacked\")</script><"
 	params := url.Values{key: []string{value}}
-
 	u := testBuilder()
 	actual := u.CreateURL("image.png", params)
 	expected := "https://test.imgix.net/image.png?hello_world=%2Ffoo%22%3E+%3Cscript%3Ealert%28%22hacked%22%29%3C%2Fscript%3E%3C"

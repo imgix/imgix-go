@@ -8,13 +8,6 @@ import (
 	"strings"
 )
 
-// SrcSetOpts structures together configuration options for creating
-// srcset attributes.
-type SrcSetOpts struct {
-	widthRange             WidthRange
-	disableVariableQuality bool
-}
-
 // WidthRange contains all the information about a width-range that is
 // needed to create a set of target-width values. A WidthRange defines
 // a range of widths that begin at the specified "begin" value, end at
@@ -57,15 +50,6 @@ var DefaultWidths = []int{
 	3524, 4087, 4741, 5500,
 	6380, 7401, 8192}
 
-// DefaultOpts structures default srcset options together. Where a default,
-// fixed-width (dpr-based) srcset will have variable quality enabled and a
-// fluid-width-based (width-paris) srcset will begin at 100, end at 8192
-// and have a tolerance of 0.08 (or 8%).
-var DefaultOpts = SrcSetOpts{
-	widthRange:             WidthRange{begin: minWidth, end: maxWidth, tol: tolerance},
-	disableVariableQuality: false,
-}
-
 type SrcsetOpts struct {
 	minWidth        int
 	maxWidth        int
@@ -74,30 +58,6 @@ type SrcsetOpts struct {
 }
 
 type SrcsetOption func(opt *SrcsetOpts)
-
-func WithMinWidth(minWidth int) SrcsetOption {
-	return func(s *SrcsetOpts) {
-		s.minWidth = minWidth
-	}
-}
-
-func WithMaxWidth(maxWidth int) SrcsetOption {
-	return func(s *SrcsetOpts) {
-		s.maxWidth = maxWidth
-	}
-}
-
-func WithTolerance(tolerance float64) SrcsetOption {
-	return func(s *SrcsetOpts) {
-		s.tolerance = tolerance
-	}
-}
-
-func WithVariableQuality(variableQuality bool) SrcsetOption {
-	return func(s *SrcsetOpts) {
-		s.variableQuality = variableQuality
-	}
-}
 
 // CreateSrcSet creates a srcset attribute string. Given a path, set of
 // parameters, and a set of SrcSetOpts, this function infers which kind
@@ -145,15 +105,28 @@ func (b *URLBuilder) CreateSrcSet(
 	return b.buildSrcSetPairs(path, params, targets)
 }
 
-// CreateSrcSetFromRange creates a srcset attribute whose URLs
-// are described by the widths within the specified range. begin,
-// end, and tol (tolerance) define the widths-range. The range
-// begins at the minimum value and ends at the maximal value; the
-// tol or tolerance dictates the amount of tolerable image width
-// variation between each width in the range.
-func (b *URLBuilder) CreateSrcSetFromRange(path string, params url.Values, wr WidthRange) string {
-	targets := TargetWidths(wr.begin, wr.end, wr.tol)
-	return b.buildSrcSetPairs(path, params, targets)
+func WithMinWidth(minWidth int) SrcsetOption {
+	return func(s *SrcsetOpts) {
+		s.minWidth = minWidth
+	}
+}
+
+func WithMaxWidth(maxWidth int) SrcsetOption {
+	return func(s *SrcsetOpts) {
+		s.maxWidth = maxWidth
+	}
+}
+
+func WithTolerance(tolerance float64) SrcsetOption {
+	return func(s *SrcsetOpts) {
+		s.tolerance = tolerance
+	}
+}
+
+func WithVariableQuality(variableQuality bool) SrcsetOption {
+	return func(s *SrcsetOpts) {
+		s.variableQuality = variableQuality
+	}
 }
 
 // CreateSrcSetFromWidths takes a path, a set of params, and an array of widths
@@ -189,15 +162,13 @@ func (b *URLBuilder) buildSrcSetDpr(path string, params url.Values, useVariableQ
 		params.Set("dpr", ratio)
 		dprQuality := DprQualities[ratio]
 
-		// If variable quality is disabled, then first try to get
-		// any `q` param
-		if !useVariableQuality {
+		if useVariableQuality {
+			params.Set("q", dprQuality)
+		} else {
 			qValue := params.Get("q")
 			if qValue != "" {
 				params.Set("q", qValue)
 			}
-		} else {
-			params.Set("q", dprQuality)
 		}
 
 		entry := b.createImageCandidateString(path, params, ratio+"x")
