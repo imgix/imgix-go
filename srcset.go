@@ -152,6 +152,7 @@ func (b *URLBuilder) buildSrcSetDpr(path string, params url.Values, useVariableQ
 	var DprQualities = map[string]string{"1": "75", "2": "50", "3": "35", "4": "23", "5": "20"}
 	var srcSetEntries []string
 
+	qValue := params.Get("q")
 	// We could iterate over the map directly, but that doesn't yield
 	// deterministic results, ie. 5x might come before 1x in the final
 	// srcset attribute string. To prevent this, we iterate over the
@@ -161,13 +162,12 @@ func (b *URLBuilder) buildSrcSetDpr(path string, params url.Values, useVariableQ
 		params.Set("dpr", ratio)
 		dprQuality := DprQualities[ratio]
 
-		if useVariableQuality {
+		if useVariableQuality && qValue != "" {
+			params.Set("q", qValue)
+		} else if useVariableQuality {
 			params.Set("q", dprQuality)
-		} else {
-			qValue := params.Get("q")
-			if qValue != "" {
-				params.Set("q", qValue)
-			}
+		} else if qValue != "" {
+			params.Set("q", qValue)
 		}
 
 		entry := b.createImageCandidateString(path, params, ratio+"x")

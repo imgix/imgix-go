@@ -49,30 +49,36 @@ import (
 )
 
 func main() {
-    ub := NewURLBuilder("demo.imgix.net")
+    ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
     ixUrl := ub.CreateURL("path/to/image.jpg", url.Values{})
     // ixUrl == "https://demo.imgix.net/path/to/image.jpg"
 }
 ```
 
 ```go
-ub := NewURLBuilder("demo.imgix.net")
-ub.CreateURL("path/to/image.jpg", url.Values{"h": []string{"100"}, "w": []string{"100"}})
-// "https://demo.imgix.net/path/to/image.jpg?h=100&w=100"
+ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
+ixURL := ub.CreateURL("path/to/image.jpg", Param("w", "320"), Param("auto", "format", "compress"))
+// https://demo.imgix.net/path/to/image.jpg?auto=format%2Ccompress&w=320
 ```
 
-_HTTPS_ support is enabled by default. _HTTP_ can be toggled on by setting `use_https` to `False`:
+_HTTPS_ support is enabled by default. _HTTP_ can be toggled on by setting `useHTTPS` to `false`. This can be done in one of two ways:
 
 ```go
+// Either by specifying an option at time of construction:
+ub := NewURLBuilder("demo.imgix.net", WithHTTPS(false))
+```
+
+```go
+// Or by using the SetUseHTTPS method.
 ub := NewURLBuilder("demo.imgix.net")
 ub.SetUseHTTPS(false)
-ub.CreateURL("path/to/image.jpg", url.Values{})
+ub.CreateURL("path/to/image.jpg")
 // "http://demo.imgix.net/path/to/image.jpg"
 ```
 
 ## Secure and Sign URLs
 
-To produce a secure URL, you must enable [Secure URLs](https://docs.imgix.com/setup/securing-images#enabling-secure-urls) on your source and then provide your token to the URL builder. The builder will use this token to sign your URL––securing the URL against tampering or alterations made by anyone without access to your token.
+To produce a secure URL, you must enable [Secure URLs](https://docs.imgix.com/setup/securing-images#enabling-secure-urls) on your source and then provide your token to the URL builder. The builder will use this token to sign your URL––thus securing the URL against tampering or alterations made by anyone without access to your token.
 
 Note that due to the way signing secures URLs by "locking" them in their generated state, it's required that a URL be re-signed and secured after any modifications (e.g. updating parameters, path, etc.). Fortunately, our SDK will handle re-signing automatically.
 
@@ -103,10 +109,10 @@ func main() {
 	}
 
 	ixToken := os.Getenv("IX_TOKEN")
-	ub := NewURLBuilderWithToken("demo.imgix.net", ixToken)
+	ub := NewURLBuilder("demo.imgix.net", WithToken(ixToken), WithLibParam(false))
 
 	expected := "https://demo.imgix.net/path/to/image.jpg?s=5dde0b0e48067925082d670d0e987fcb"
-	actual := ub.CreateSignedURL("path/to/image.jpg", url.Values{})
+	actual := ub.CreateSignedURL("path/to/image.jpg")
 }
 ```
 
@@ -115,8 +121,8 @@ func main() {
 The imgix-go package allows for generation of custom srcset attributes, which can be invoked through the `CreateSrcSet` method. By default, the generated srcset will allow for responsive size switching by building a list of image-width mappings.
 
 ```go
-ub := NewURLBuilderWithToken("demos.imgix.net", token)
-srcset := ub.CreateSrcSet("image.png", url.Values{}, DefaultOpts)
+ub := NewURLBuilder("demos.imgix.net", WithToken(token))
+srcset := ub.CreateSrcSet("image.png", []IxParam{})
 ```
 
 The above will produce the following srcset attribute value, which can then be served to the client: 
@@ -126,7 +132,7 @@ https://demos.imgix.net/image.png?w=100&s=9abb0d0db5a4901fcb6420a1a37efe5d 100w,
 https://demos.imgix.net/image.png?w=116&s=cfea3b9598400fdb5dd273c50a666116 116w,
 https://demos.imgix.net/image.png?w=135&s=e749702260debafa9aa71e55524b39ee 135w,
 https://demos.imgix.net/image.png?w=156&s=0fb6a5f27dfece682320b73c466e1e39 156w,
-										...
+...
 https://demos.imgix.net/image.png?w=7401&s=3b2fbb6aa880a260ba650dc773d47216 7401w,
 https://demos.imgix.net/image.png?w=8192&s=1288314bbb33a4f441100b899dd67a00 8192w
 ```
@@ -139,10 +145,9 @@ In cases where enough information is provided about an image's dimensions, `Crea
 By invoking `CreateSrcSet` with either a width **or** the height and aspect ratio in the parameters, a fixed-width srcset will be generated. Wherein, the image width is fixed, but the pixel density varies.
 
 ```go
-ub := NewURLBuilder("demo.imgix.net")
-params := url.Values{"h": []string{"800"}, "ar": []string{"4:3"}}
-options := SrcSetOpts{disableVariableQuality: false}
-srcset := ub.CreateSrcSet("image.png", params, options)
+ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
+params := []IxParam{Param("h", "800"), Param("ar", "4:3")}
+ub.CreateSrcSet("image.png", params)
 ```
 
 Will produce the following attribute value:
@@ -162,9 +167,24 @@ For more information to better understand srcset, we highly recommend
 
 This library will automatically append a variable `q` parameter mapped to each `dpr` parameter when generating a [fixed-width image](#fixed-width-images) srcset. This technique is commonly used to compensate for the increased file size of high-DPR images.
 
-Since high-DPR images are displayed at a higher pixel density on devices, image quality can be lowered to reduce overall file size––without sacrificing perceived visual quality. For more information and examples of this technique in action, see [this blog post](https://blog.imgix.com/2016/03/30/dpr-quality).
+Since high-DPR images are displayed at a higher pixel density on devices, image quality can be lowered to reduce overall file size without sacrificing perceived visual quality. For more information and examples of this technique in action, see [this blog post](https://blog.imgix.com/2016/03/30/dpr-quality).
 
-This behavior will respect any overriding `q` value passed in as a parameter. Additionally, it can be disabled altogether by passing `SrcSetOpts{disableVariableQuality: true}` to `CreateSrcSet`.
+This behavior will respect any overriding `q` value passed in as a parameter. Additionally, it can be disabled by passing the `WithVariableQuality(false)` `SrcsetOption`.
+
+```go
+ub := NewURLBuilder("test.imgix.net")
+
+params := []IxParam{Param("h", "800"), Param("ar", "4:3"), Param("q", "99")}
+ub.CreateSrcSet("image.png", params, WithVariableQuality(false))
+```
+
+```html
+https://test.imgix.net/image.png?ar=4%3A3&dpr=1&h=800&q=99 1x,
+https://test.imgix.net/image.png?ar=4%3A3&dpr=2&h=800&q=99 2x,
+https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=800&q=99 3x,
+https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=99 4x,
+https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=99 5x"
+```
 
 
 ### Fluid-Width Images
@@ -175,23 +195,29 @@ In situations where specific widths are desired when generating `srcset` pairs, 
 
 ```go
 ub := NewURLBuilder("demo.imgix.net")
-srcset := ub.CreateSrcSetFromWidths("image.jpg", url.Values{}, []int{100, 200, 300, 400})
+ixParams = []IxParam{Param("mask", "ellipse")}
+srcset := ub.CreateSrcSetFromWidths("image.jpg", ixParams, []int{100, 200, 300, 400})
 ```
+
 ```html
-https://demo.imgix.net/image.jpg?w=100 100w,
-https://demo.imgix.net/image.jpg?w=200 200w,
-https://demo.imgix.net/image.jpg?w=300 300w,
-https://demo.imgix.net/image.jpg?w=400 400w
+https://demo.imgix.net/image.jpg?mask=ellipse&w=100 100w,
+https://demo.imgix.net/image.jpg?mask=ellipse&w=200 200w,
+https://demo.imgix.net/image.jpg?mask=ellipse&w=300 300w,
+https://demo.imgix.net/image.jpg?mask=ellipse&w=400 400w
 ```
 
 #### Width Ranges
 
-In certain circumstances, you may want to limit the minimum or maximum value of the non-fixed `srcset` generated by the `CreateSrcSet` method. To do this, you can specify the widths at which a srcset should `begin` and `end` by specifying a `WidthRange` in your `SrcSetOpts`:
+In certain circumstances, you may want to limit the minimum or maximum value of the non-fixed `srcset` generated by the `CreateSrcSet` method. To do this, you can specify the minWidth and maxWidth by including each as a `SrcsetOption`:
 
 ```go
-ub := NewURLBuilder("demo.imgix.net")
-options := SrcSetOpts{widthRange: WidthRange{begin: 100, end: 380, tol: 0.08}}
-srcset := ub.CreateSrcSet("image.png", url.Values{}, options)
+ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
+
+srcset := ub.CreateSrcSet(
+	"image.png",
+	[]IxParam{},
+	WithMinWidth(100),
+	WithMaxWidth(380))
 ```
 
 ```html
@@ -220,7 +246,13 @@ By default, srcset width tolerance is set to 0.08 (8 percent), which we consider
 In this case, the width tolerance is set to 20 percent:
 
 ```go
-options := SrcSetOpts{widthRange: WidthRange{begin: 100, end: 384, tol: 0.20}}
+srcsetOptions := []SrcsetOption{
+	WithMinWidth(100),
+	WithMaxWidth(384),
+	WithTolerance(0.20),
+}
+
+srcset := ub.CreateSrcSet("image.png", []IxParam{}, srcsetOptions...)
 ```
 
 ```html
@@ -235,9 +267,9 @@ https://demo.imgix.net/image.jpg?w=384 384w
 
 The `TargetWidths` function is used internally to generate lists of target widths to be used in calls to `CreateSrcSet`.
 
-It is a way to generate, play with, and explore different target widths separately from srcset attributes. We've already seen how to generate srcset attributes when the begin, end, and tolerance values are known.
+It is a way to generate, play with, and explore different target widths separately from srcset attributes. We've already seen how to generate srcset attributes when the minWidth, maxWidth, and tolerance values are known.
 
-Another approach is to use `TargetWidths` to determine which combination of values for `start`, `end`, and `tol` works best.
+Another approach is to use `TargetWidths` to determine which combination of values for `minWidth`, `maxWidth`, and `tolerance` works best.
 
 ```go
 // Create
@@ -258,7 +290,7 @@ assert.Equal(t, expectedLg, lg)
 
 // Serve
 ub := NewURLBuilder("demos.imgix.net")
-srcset := ub.CreateSrcSetFromWidths("image.png", url.Values{}, sm)
+srcset := ub.CreateSrcSetFromWidths("image.png", []IxParam{}, sm)
 // "https://demos.imgix.net/image.png?w=300 300w,\nhttps://demos.imgix.net/image.png?w=378 378w,\nhttps://demos.imgix.net/image.png?w=476 476w"
 ```
 
@@ -272,6 +304,11 @@ The `ixlib` parameter can be toggled off by setting `useLibParam` via `SetUseLib
 ```go
 ub := NewURLBuilder("demo.imgix.net")
 ub.SetUseLibParam(false)
+```
+
+Or by passing the `WithLibParam(false)` option at time of construction:
+```go
+ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
 ```
 
 <!-- Test Instructions -->

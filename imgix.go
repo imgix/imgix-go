@@ -182,7 +182,7 @@ func (b *URLBuilder) createURLFromValues(path string, params url.Values) string 
 func (b *URLBuilder) buildQueryString(params url.Values) string {
 	var encodedQueryParts []string
 	if b.useLibParam {
-		params.Add("ixlib", ixLibVersion)
+		params.Set("ixlib", ixLibVersion)
 	}
 	encodedQueryParts = encodeQuery(params)
 	return strings.Join(encodedQueryParts, "&")
