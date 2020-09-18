@@ -62,8 +62,8 @@ func TestValidators_validateRangeInvalid(t *testing.T) {
 }
 
 func TestValidators_validateRangeValid(t *testing.T) {
-	rp := rangePair{begin: 100, end: 8192}
-	validRangePair, err := validateRange(rp.begin, rp.end)
+	rp := rangePair{minWidth: 100, maxWidth: 8192}
+	validRangePair, err := validateRange(rp.minWidth, rp.maxWidth)
 	assert.Equal(t, rp, validRangePair)
 	assert.Equal(t, nil, err)
 }

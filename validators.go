@@ -7,6 +7,21 @@ import (
 	"strings"
 )
 
+// rangePair is a convenience structure used during validation.
+// Its purpose is create a consistent interface for our validators.
+type rangePair struct {
+	minWidth int
+	maxWidth int
+}
+
+// widthRange contains all the information about a width-range that is
+// needed to create a set of target-width values.
+type widthRange struct {
+	minWidth  int
+	maxWidth  int
+	tolerance float64
+}
+
 // validateDomain uses Go's url.Parse and url.Hostname functions to
 // validate the domain. Elsewhere we use a regex to filter invalid
 // domains. However, the same regex won't work in this case as Go
@@ -32,85 +47,82 @@ func validateDomain(domain string) (string, error) {
 
 }
 
-// validateMinWidth checks if the minimum, or begin value, is valid.
-// A width value is valid if it is greater than, or equal to, zero.
+// validateMinWidth checks if the value is a valid minWidth.
+// A minWidth value is valid if it is greater than, or equal to, zero.
 // If the value is less than zero, an error is returned.
-func validateMinWidth(value int) (int, error) {
-	msg := "`begin` width must be greater than, or equal to, zero"
-	if value < 0 {
+func validateMinWidth(minWidth int) (int, error) {
+	msg := "`minWidth` value must be greater than, or equal to, zero"
+	if minWidth < 0 {
 		return -1, errors.New(msg)
 	}
-	return value, nil
+	return minWidth, nil
 }
 
-// validateMaxWidth checks if the maximum, or end value, is valid.
-// A width value is valid if it is greater than, or equal to, zero.
+// validateMaxWidth checks if the value is a valid maxWidth.
+// A maxWidth value is valid if it is greater than, or equal to, zero.
 // If the value is less than zero, an error is returned.
-func validateMaxWidth(value int) (int, error) {
-	msg := "`end` width must be greater than, or equal to, zero"
-	if value < 0 {
+func validateMaxWidth(maxWidth int) (int, error) {
+	msg := "`maxWidth` value must be greater than, or equal to, zero"
+	if maxWidth < 0 {
 		return -1, errors.New(msg)
 	}
-	return value, nil
+	return maxWidth, nil
 }
 
-// validateWidthTolerance checks if the tol, or width tolerance value,
-// is valid. A width tolerance value is valid if it is greater than,
-// or equal to, one percent (0.01). If the value is less than one
-// percent, an error is returned.
+// validateWidthTolerance checks if the vallue is a valid tolerance value.
+// A width tolerance value is valid if it is greater than, or equal to,
+// one percent (0.01). If the value is less than one percent, an error
+// is returned.
 func validateWidthTolerance(value float64) (float64, error) {
 	const onePercent = 0.01
-	msg := "`tol`erance must be greater than, or equal to, one percent (0.01)"
+	msg := "`defaultTolerance`erance must be greater than, or equal to, one percent (0.01)"
 	if value < onePercent {
 		return -1, errors.New(msg)
 	}
 	return value, nil
 }
 
-// validateRange checks that the range defined by begin and end is
-// valid. The range defined by begin and end is valid if the begin
-// value is less than or equal to the end value. If the end value
-// is less than the begin value, an error is returned.
-func validateRange(begin int, end int) (rangePair, error) {
+// validateRange checks that the range defined by minWidth and maxWidth is
+// valid. The range defined by minWidth and maxWidth is valid if both
+// values pass their checks and if the range is found to be increasing.
+func validateRange(minWidth int, maxWidth int) (rangePair, error) {
 	// This invalidRangePair is used as a return value on error.
 	invalidRangePair := rangePair{-1, -1}
 
-	validBegin, beginErr := validateMinWidth(begin)
-	if beginErr != nil {
-		return invalidRangePair, beginErr
+	validMin, minErr := validateMinWidth(minWidth)
+	if minErr != nil {
+		return invalidRangePair, minErr
 	}
 
-	validEnd, endErr := validateMaxWidth(end)
-	if endErr != nil {
-		return invalidRangePair, endErr
+	validMax, maxErr := validateMaxWidth(maxWidth)
+	if maxErr != nil {
+		return invalidRangePair, maxErr
 	}
 
-	if validEnd < validBegin {
-		// If the "begin width" is greater than the "end width"
-		// for the range, error!
-		msg := "`begin` width must be less than or equal to the `end` width"
+	// Check if range increases.
+	if validMax < validMin {
+		msg := "`minWidth` must be less than or equal to the `maxWidth`"
 		return rangePair{-1, -1}, errors.New(msg)
 	}
-	return rangePair{validBegin, validEnd}, nil
+	return rangePair{validMin, validMax}, nil
 }
 
-// validateRangeWithTolerance checks that the range defined by begin,
-// end, and tol is valid. First, begin and end values are validated
-// using validateRange. Next, the tolerance is validated using
-// validateWidthTolerance. If we get a valida range pair and tolerance,
-// we can return a valid WidthRange; otherwise, an invalid width range
-// is returned along with the error that occurred.
-func validateRangeWithTolerance(begin int, end int, tol float64) (WidthRange, error) {
-	rp, rangeErr := validateRange(begin, end)
+// validateRangeWithTolerance checks that the range defined by
+// minWidth, maxWidth, and tolerance is valid.
+func validateRangeWithTolerance(minWidth int, maxWidth int, tolerance float64) (widthRange, error) {
+	rp, rangeErr := validateRange(minWidth, maxWidth)
 	if rangeErr != nil {
-		return WidthRange{-1, -1, -1.0}, rangeErr
+		return widthRange{-1, -1, -1.0}, rangeErr
 	}
 
-	validTol, tolErr := validateWidthTolerance(tol)
+	validTol, tolErr := validateWidthTolerance(tolerance)
 	if tolErr != nil {
-		return WidthRange{-1, -1, -1.0}, tolErr
+		return widthRange{-1, -1, -1.0}, tolErr
 	}
-	return WidthRange{begin: rp.begin, end: rp.end, tol: validTol}, nil
+	return widthRange{
+		minWidth:  rp.minWidth,
+		maxWidth:  rp.maxWidth,
+		tolerance: validTol}, nil
 }
 
 // validateWidths checks that an array is comprised of only positive
