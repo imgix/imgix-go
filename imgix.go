@@ -8,14 +8,17 @@ import (
 
 const ixLibVersion = "go-v2.0.0"
 
-// URLBuilder facilitates the building of URLs.
+// URLBuilder facilitates the building of imgix URLs.
 type URLBuilder struct {
-	domain      string
-	token       string
-	useHTTPS    bool
-	useLibParam bool
+	domain      string // A source's domain, e.g. example.imgix.net
+	token       string // A source's secure token used to sign/secure URLs.
+	useHTTPS    bool   // Denotes whether or not to use HTTPS.
+	useLibParam bool   // Denotes whether or not to apply the ixLibVersion.
 }
 
+// BuilderOption provides a convenient interface for supplying URLBuilder
+// options to the NewURLBuilder constructor. See WithToken, WithHTTPS, etc.
+// for more details.
 type BuilderOption func(b *URLBuilder)
 
 // NewURLBuilder creates a new URLBuilder with the given domain, with HTTPS enabled.
@@ -33,18 +36,27 @@ func NewURLBuilder(domain string, options ...BuilderOption) URLBuilder {
 	return urlBuilder
 }
 
+// WithToken returns a BuilderOption that NewURLBuilder consumes.
+// The constructor uses this closure to set the URLBuilder's token
+// attribute.
 func WithToken(token string) BuilderOption {
 	return func(b *URLBuilder) {
 		b.token = token
 	}
 }
 
+// WithHTTPS returns a BuilderOption that NewURLBuilder consumes.
+// The constructor uses this closure to set the URLBuilder's useHTTPS
+// attribute.
 func WithHTTPS(useHTTPS bool) BuilderOption {
 	return func(b *URLBuilder) {
 		b.useHTTPS = useHTTPS
 	}
 }
 
+// WithLibParam returns a BuilderOption that NewURLBuilder consumes.
+// The constructor uses this closure to set the URLBuilder's useLibParam
+// attribute.
 func WithLibParam(useLibParam bool) BuilderOption {
 	return func(b *URLBuilder) {
 		b.useLibParam = useLibParam
@@ -89,8 +101,17 @@ func (b *URLBuilder) SetToken(token string) {
 	b.token = token
 }
 
+// IxParam seeks to improve the ergonomics of setting url.Values.
+// For instance, without IxParam,  caller's would need to write:
+// url.Values{"w": []string{"480"}, "auto": []string{"format", "compress"}}
+// However, by employing this functional type we can write:
+// []IxParam{Param("w", "480"), Param("auto", "format", "compress")}
 type IxParam func(u *url.Values)
 
+// Param accepts a key and a variable number of values. It returns a
+// closure as an IxParam that, once called, will populate the url.Values
+// structure. Note that values aren't added to the query parameters
+// (url.Values) until this function is applied (e.g. in CreateURL).
 func Param(k string, v ...string) IxParam {
 	return func(u *url.Values) {
 		for _, value := range v {
