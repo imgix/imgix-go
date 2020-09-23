@@ -50,7 +50,7 @@ import (
 
 func main() {
     ub := NewURLBuilder("demo.imgix.net", WithLibParam(false))
-    ixUrl := ub.CreateURL("path/to/image.jpg", url.Values{})
+    ixUrl := ub.CreateURL("path/to/image.jpg")
     // ixUrl == "https://demo.imgix.net/path/to/image.jpg"
 }
 ```
@@ -112,7 +112,7 @@ func main() {
 	ub := NewURLBuilder("demo.imgix.net", WithToken(ixToken), WithLibParam(false))
 
 	expected := "https://demo.imgix.net/path/to/image.jpg?s=5dde0b0e48067925082d670d0e987fcb"
-	actual := ub.CreateSignedURL("path/to/image.jpg")
+	actual := ub.CreateURL("path/to/image.jpg")
 }
 ```
 

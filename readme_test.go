@@ -22,6 +22,13 @@ func TestReadMe_usageWithParams(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func TestReadMe_SecuredURLUsage(t *testing.T) {
+	ub := NewURLBuilder("demo.imgix.net", WithToken("MYT0KEN"), WithLibParam(false))
+	expected := "https://demo.imgix.net/path/to/image.jpg?s=c8bd1807209f7f1d96dd7123f92febb4"
+	actual := ub.CreateURL("path/to/image.jpg")
+	assert.Equal(t, expected, actual)
+}
+
 func TestReadMe_usageSrcsetGeneration(t *testing.T) {
 	ub := NewURLBuilder("demos.imgix.net", WithToken("foo123"))
 	srcset := ub.CreateSrcSet("image.png", []IxParam{})
