@@ -46,7 +46,7 @@ type SrcsetOpts struct {
 
 type SrcsetOption func(opt *SrcsetOpts)
 
-// CreateSrcSet creates a srcset attribute string. Given a path, set of
+// CreateSrcset creates a srcset attribute string. Given a path, set of
 // IxParam parameters, and a set of SrcsetOptions, this function infers
 // which kind of srcset attribute to create.
 //
@@ -60,7 +60,7 @@ type SrcsetOption func(opt *SrcsetOpts)
 // this function will create a fluid-width srcset attribute wherein
 // each URL (or image candidate string) is described by a width in the
 // specified width-range.
-func (b *URLBuilder) CreateSrcSet(
+func (b *URLBuilder) CreateSrcset(
 	path string,
 	params []IxParam,
 	options ...SrcsetOption) string {
@@ -122,9 +122,9 @@ func WithVariableQuality(variableQuality bool) SrcsetOption {
 	}
 }
 
-// CreateSrcSetFromWidths takes a path, a set of params, and an array of widths
+// CreateSrcsetFromWidths takes a path, a set of params, and an array of widths
 // to create a srcset attribute with width-described URLs (image candidate strings).
-func (b *URLBuilder) CreateSrcSetFromWidths(path string, params []IxParam, widths []int) string {
+func (b *URLBuilder) CreateSrcsetFromWidths(path string, params []IxParam, widths []int) string {
 	urlParams := url.Values{}
 
 	for _, fn := range params {
