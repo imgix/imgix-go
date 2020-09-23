@@ -15,7 +15,7 @@
 <!-- Table of Contents -->
 - [Installation](#installation)
 - [Usage](#usage)
-- [Signed URLs](#signed-urls)
+- [Secure URLs](#secure-and-sign-urls)
 - [Srcset Generation](#srcset-generation)
     - [Fixed-Width Images](#fixed-width-images)
         - [Variable Quality](#variable-quality)
