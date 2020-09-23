@@ -167,17 +167,17 @@ func isBase64(paramKey string) bool {
 // https://tools.ietf.org/rfcdiff?url2=rfc4648
 func base64EncodeQueryParamValue(queryValue string) string {
 	maybePaddedValue := base64.URLEncoding.EncodeToString([]byte(queryValue))
-	return unPad(maybePaddedValue)
+	return unPadBase64Value(maybePaddedValue)
 }
 
-// unPad removes the extra '=' (equal signs) from strings. In base64,
-// '=' are added to the end of the encoding as padding. This padding
-// is significant if concatenating multiple base64-encoded strings.
-// In our case, '&' acts as the primary delimeter and base64-encoded
+// unPadBase64Value removes the extra '=' (equal signs) from strings.
+// In base64, '=' are added to the end of the encoding as padding.
+// This padding is significant if concatenating multiple base64-encoded
+// strings. In our case, '&' acts as the primary delimeter and base64-encoded
 // strings (query string values, usually) are dealt with individually
 // (meaning that the length of the base64 encoded string is always
 // known; this is important when decoding base64).
-func unPad(s string) string {
+func unPadBase64Value(s string) string {
 	if strings.HasSuffix(s, "=") {
 		return strings.ReplaceAll(s, "=", "")
 	}
