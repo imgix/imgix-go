@@ -16,7 +16,7 @@ func testClientWithToken() URLBuilder {
 
 func TestURLBuilder_CreateSrcSetFromWidths(t *testing.T) {
 	c := testClient()
-	actual := c.CreateSrcSetFromWidths("image.jpg", []IxParam{}, []int{100, 200, 300, 400})
+	actual := c.CreateSrcsetFromWidths("image.jpg", []IxParam{}, []int{100, 200, 300, 400})
 	expected := "https://test.imgix.net/image.jpg?w=100 100w,\n" +
 		"https://test.imgix.net/image.jpg?w=200 200w,\n" +
 		"https://test.imgix.net/image.jpg?w=300 300w,\n" +
@@ -29,7 +29,7 @@ func TestURLBuilder_CreateSrcSetFromRange(t *testing.T) {
 	// Example of setting the useLibParam after initial construction.
 	c.SetUseLibParam(false)
 
-	actual := c.CreateSrcSet(
+	actual := c.CreateSrcset(
 		"image.png",
 		[]IxParam{},
 		WithMinWidth(100),
@@ -57,7 +57,7 @@ func TestURLBuilder_CreateSrcSetFixedW(t *testing.T) {
 		"https://test.imgix.net/image.png?dpr=3&q=35&w=320 3x,\n" +
 		"https://test.imgix.net/image.png?dpr=4&q=23&w=320 4x,\n" +
 		"https://test.imgix.net/image.png?dpr=5&q=20&w=320 5x"
-	actual := c.CreateSrcSet("image.png", []IxParam{Param("w", "320")})
+	actual := c.CreateSrcset("image.png", []IxParam{Param("w", "320")})
 	assert.Equal(t, expected, actual)
 }
 
@@ -69,7 +69,7 @@ func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=320&q=35 3x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=320&q=23 4x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=320&q=20 5x"
-	actual := c.CreateSrcSet("image.png", params, WithVariableQuality(true))
+	actual := c.CreateSrcset("image.png", params, WithVariableQuality(true))
 	assert.Equal(t, expected, actual)
 }
 
@@ -83,7 +83,7 @@ func TestURLBuilder_CreateSrcsetFixedHandARImplicitVarQuality(t *testing.T) {
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=3&h=320&q=35 3x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=320&q=23 4x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=320&q=20 5x"
-	actual := c.CreateSrcSet("image.png", params)
+	actual := c.CreateSrcset("image.png", params)
 	assert.Equal(t, expected, actual)
 }
 
@@ -93,7 +93,7 @@ func TestURLBuilder_CreateSrcSetFluidHighTol(t *testing.T) {
 	expected := "https://test.imgix.net/image.png?w=100 100w,\n" +
 		"https://test.imgix.net/image.png?w=8192 8192w"
 
-	actual := c.CreateSrcSet(
+	actual := c.CreateSrcset(
 		"image.png",
 		[]IxParam{},
 		WithMinWidth(100),
@@ -110,7 +110,7 @@ func TestURLBuilder_CreateSrcSetFluidWidth100to108at2percent(t *testing.T) {
 		"https://test.imgix.net/image.png?w=104 104w,\n" +
 		"https://test.imgix.net/image.png?w=108 108w"
 
-	actual := c.CreateSrcSet(
+	actual := c.CreateSrcset(
 		"image.png",
 		[]IxParam{},
 		WithMinWidth(100),
@@ -130,7 +130,7 @@ func TestURLBuilder_CreateSrcsetQOverridesWithVariableQuality(t *testing.T) {
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=99 4x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=99 5x"
 
-	actual := c.CreateSrcSet("image.png", params, WithVariableQuality(true))
+	actual := c.CreateSrcset("image.png", params, WithVariableQuality(true))
 	assert.Equal(t, expected, actual)
 }
 
@@ -144,6 +144,6 @@ func TestURLBuilder_CreateSrcsetQOverridesWithoutVariableQuality(t *testing.T) {
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=4&h=800&q=99 4x,\n" +
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=800&q=99 5x"
 
-	actual := c.CreateSrcSet("image.png", params, WithVariableQuality(false))
+	actual := c.CreateSrcset("image.png", params, WithVariableQuality(false))
 	assert.Equal(t, expected, actual)
 }
