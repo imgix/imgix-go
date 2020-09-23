@@ -16,6 +16,8 @@ import (
 // prefixed by a percent-encoded prefix. If it is, we know that it's
 // a proxy and that it's percent-encoded. Finally, if the path isn't
 // prefixed by any of these four prefixes, it is not a valid proxy.
+// This might be "just enough validation," but if we run into issues
+// we can make this check smarter/more-robust.
 func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
 	path := p
 	if strings.HasPrefix(p, "/") {
@@ -33,6 +35,13 @@ func checkProxyStatus(p string) (isProxy bool, isEncoded bool) {
 	if strings.HasPrefix(path, encodedHTTP) || strings.HasPrefix(path, encodedHTTPS) {
 		return true, true
 	}
+
+	const encodedHTTPLower = "http%3a%2f%2f"
+	const encodedHTTPSLower = "https%3a%ff%2f"
+	if strings.HasPrefix(path, encodedHTTPLower) || strings.HasPrefix(path, encodedHTTPSLower) {
+		return true, true
+	}
+
 	return false, false
 }
 
