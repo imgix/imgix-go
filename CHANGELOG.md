@@ -1,11 +1,12 @@
 # Changelog
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-# [v2.0.0](https://github.com/imgix/imgix-go/compare/1.0.0...2.0.0) - September 23, 2020
+## [v2.0.0](https://github.com/imgix/imgix-go/compare/1.0.0...2.0.0) - September 23, 2020
 
-# Breaking Changes
-imgix-go has changed dramatically since v1.0.0. Nearly every change has been "breaking." Our goal has been to offer the same set of features in  imgix-go as we do in imgix-rb, imgix-php, imgix-core-js, etc. and we have achieved this goal.
+### Breaking Changes
+imgix-go has undergone complete rewrite in order to reach parity with the rest of [imgix's SDK](https://docs.imgix.com/libraries#client-libraries). Our team is excited to share these changes via a new major release -- v2.0.0.
 
-# Features
+### Features
 * imgix [URL auto generation](https://github.com/imgix/imgix-go#usage)
   * HTTPS and HTTP support
   * [Token-secured URLs](https://docs.imgix.com/setup/securing-images#enabling-secure-urls)
@@ -17,7 +18,7 @@ imgix-go has changed dramatically since v1.0.0. Nearly every change has been "br
   * [width tolerance](https://github.com/imgix/imgix-go#width-tolerance)
   * [target widths](https://github.com/imgix/imgix-go#width-tolerance)
 
-# Install
+### Install
 
 ```
 go get github.com/imgix/imgix-go
