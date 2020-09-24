@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## [v2.0.0](https://github.com/imgix/imgix-go/compare/1.0.0...2.0.0) - September 23, 2020
+## [v2.0.0](https://github.com/imgix/imgix-go/compare/1.0.0...2.0.0) - September 24, 2020
 
 ### Breaking Changes
 imgix-go has undergone a complete rewrite in order to reach parity with the rest of [imgix's SDK](https://docs.imgix.com/libraries#client-libraries). Our team is excited to share these changes via a new major release -- v2.0.0.
