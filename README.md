@@ -171,10 +171,10 @@ Since high-DPR images are displayed at a higher pixel density on devices, image 
 This behavior will respect any overriding `q` value passed in as a parameter. Additionally, it can be disabled by passing the `WithVariableQuality(false)` `SrcsetOption`.
 
 ```go
-ub := NewURLBuilder("test.imgix.net")
+ub := ix.NewURLBuilder("test.imgix.net")
 
 params := []ix.IxParam{ix.Param("h", "800"), ix.Param("ar", "4:3"), ix.Param("q", "99")}
-ub.CreateSrcset("image.png", params, WithVariableQuality(false))
+ub.CreateSrcset("image.png", params, ix.WithVariableQuality(false))
 ```
 
 ```html
@@ -194,7 +194,7 @@ In situations where specific widths are desired when generating `srcset` pairs, 
 
 ```go
 ub := ix.NewURLBuilder("demo.imgix.net")
-ixParams = []ix.IxParam{Param("mask", "ellipse")}
+ixParams = []ix.IxParam{ix.Param("mask", "ellipse")}
 srcset := ub.CreateSrcsetFromWidths("image.jpg", ixParams, []int{100, 200, 300, 400})
 ```
 
@@ -214,9 +214,9 @@ ub := ix.NewURLBuilder("demo.imgix.net", ix.WithLibParam(false))
 
 srcset := ub.CreateSrcset(
 	"image.png",
-	[ix.IxParam{},
-	WithMinWidth(100),
-	WithMaxWidth(380))
+	[]ix.IxParam{},
+	ix.WithMinWidth(100),
+	ix.WithMaxWidth(380))
 ```
 
 ```html
@@ -245,13 +245,13 @@ By default, srcset width tolerance is set to 0.08 (8 percent), which we consider
 In this case, the width tolerance is set to 20 percent:
 
 ```go
-srcsetOptions := []SrcsetOption{
-	WithMinWidth(100),
-	WithMaxWidth(384),
-	WithTolerance(0.20),
+srcsetOptions := []ix.SrcsetOption{
+	ix.WithMinWidth(100),
+	ix.WithMaxWidth(384),
+	ix.WithTolerance(0.20),
 }
 
-srcset := ub.CreateSrcset("image.png", []IxParam{}, srcsetOptions...)
+srcset := ub.CreateSrcset("image.png", []ix.IxParam{}, srcsetOptions...)
 ```
 
 ```html
