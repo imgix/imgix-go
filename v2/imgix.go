@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const ixLibVersion = "go-v2.0.0"
+const ixLibVersion = "go-v2.0.1"
 
 // URLBuilder facilitates the building of imgix URLs.
 type URLBuilder struct {
