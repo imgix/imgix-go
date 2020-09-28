@@ -31,7 +31,7 @@
 ## Installation
 
 ```bash
-go get github.com/imgix/imgix-go/v2
+go get github.com/imgix/imgix-go/v2@v2.0.1
 ```
 
 <!-- Usage Instructions -->
