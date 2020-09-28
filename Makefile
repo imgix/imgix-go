@@ -1,8 +1,9 @@
 test: deps fmt
-	go test -cover
+	cd ./v2 && go test -cover
+	go mod tidy
 
 deps:
 	go get github.com/stretchr/testify golang.org/x/tools/cmd/cover
 
 fmt:
-	go fmt
+	cd ./v2 go fmt
