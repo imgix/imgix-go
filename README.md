@@ -6,7 +6,7 @@
 
 ![Version](https://badge.fury.io/gh/imgix%2Fimgix-go.svg)
 [![Build Status](https://travis-ci.org/imgix/imgix-go.svg?branch=main)](https://travis-ci.org/imgix/imgix-go)
-[![Godoc](https://godoc.org/github.com/imgix/imgix-go?status.svg)](https://godoc.org/github.com/imgix/imgix-go)
+[![Godoc](https://godoc.org/github.com/imgix/imgix-go?status.svg)](https://godoc.org/github.com/imgix/imgix-go/v2)
 [![License](https://img.shields.io/github/license/imgix/imgix-go)](https://github.com/imgix/imgix-go/blob/main/LICENSE)
 
 ---
