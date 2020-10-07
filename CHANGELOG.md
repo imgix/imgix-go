@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [v2.0.2](https://github.com/imgix/imgix-go/compare/2.0.1...2.0.2) - October 6, 2020
+
+### Changes
+The changes in this release have been made to address a GoDocs issue. The only changes have been in this file and to bump the release version patch level.
+
 ## [v2.0.1](https://github.com/imgix/imgix-go/compare/2.0.0...2.0.1) - September 28, 2020
 
 ### Changes
