@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file. See [standa
 ### Changes
 The changes in this release have been made to address a GoDocs issue. The only changes have been in this file and to bump the release version patch level.
 
+- chore: copy license into v2/ ([#14](https://github.com/imgix/imgix-go/pull/14))
+
 ## [v2.0.1](https://github.com/imgix/imgix-go/compare/2.0.0...2.0.1) - September 28, 2020
 
 ### Changes
