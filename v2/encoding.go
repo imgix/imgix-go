@@ -70,7 +70,7 @@ func encodeProxy(proxyPath string, isEncoded bool) (escapedProxyPath string) {
 		nearlyEscaped = "/" + url.PathEscape(proxyPath)
 	}
 
-	escapedProxyPath = strings.ReplaceAll(nearlyEscaped, ":", "%3A")
+	escapedProxyPath = strings.Replace(nearlyEscaped, ":", "%3A", -1)
 	return escapedProxyPath
 }
 
@@ -100,7 +100,7 @@ func splitAndEscape(path string) string {
 
 	for _, component := range splitPath {
 		c := url.PathEscape(component)
-		pathEscaped := strings.ReplaceAll(c, "+", "%2B")
+		pathEscaped := strings.Replace(c, "+", "%2B", -1)
 		result = append(result, pathEscaped)
 	}
 
@@ -188,7 +188,7 @@ func base64EncodeQueryParamValue(queryValue string) string {
 // known; this is important when decoding base64).
 func unPadBase64Value(s string) string {
 	if strings.HasSuffix(s, "=") {
-		return strings.ReplaceAll(s, "=", "")
+		return strings.Replace(s, "=", "", -1)
 	}
 	return s
 }
