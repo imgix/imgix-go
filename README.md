@@ -8,6 +8,7 @@
 [![Build Status](https://travis-ci.com/imgix/imgix-go.svg?branch=main)](https://travis-ci.com/imgix/imgix-go)
 [![Godoc](https://godoc.org/github.com/imgix/imgix-go?status.svg)](https://godoc.org/github.com/imgix/imgix-go/v2)
 [![License](https://img.shields.io/github/license/imgix/imgix-go)](https://github.com/imgix/imgix-go/blob/main/LICENSE)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fimgix%2Fimgix-go.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fimgix%2Fimgix-go?ref=badge_shield)
 
 ---
 <!-- /ix-docs-ignore -->
@@ -15,17 +16,18 @@
 <!-- Table of Contents -->
 - [Installation](#installation)
 - [Usage](#usage)
-- [Secure URLs](#secure-and-sign-urls)
+- [Secure and Sign URLs](#secure-and-sign-urls)
 - [Srcset Generation](#srcset-generation)
-    - [Fixed-Width Images](#fixed-width-images)
-        - [Variable Quality](#variable-quality)
-    - [Fluid-Width Images](#fluid-width-images)
-        - [Custom Widths](#custom-widths)
-        - [Width Ranges](#width-ranges)
-        - [Width Tolerance](#width-tolerance)
-        - [Explore Target Widths](#explore-target-widths)
+    * [Fixed-Width Images](#fixed-width-images)
+        + [Variable Quality](#variable-quality)
+    * [Fluid-Width Images](#fluid-width-images)
+        + [Custom Widths](#custom-widths)
+        + [Width Ranges](#width-ranges)
+        + [Width Tolerance](#width-tolerance)
+        + [Explore Target Widths](#explore-target-widths)
 - [The `ixlib` Parameter](#the-ixlib-parameter)
 - [Testing](#testing)
+- [License](#license)
 
 <!-- Installation Instructions -->
 ## Installation
@@ -318,3 +320,6 @@ You can go test this code with:
 ``` bash
 $ go test
 ```
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fimgix%2Fimgix-go.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fimgix%2Fimgix-go?ref=badge_large)
