@@ -84,11 +84,10 @@ func (b *URLBuilder) CreateSrcset(
 	// Check params contains a width (w) or height (h) _and_ aspect ratio (ar);
 	hasWidth := urlParams.Get("w") != ""
 	hasHeight := urlParams.Get("h") != ""
-	hasAspectRatio := urlParams.Get("ar") != ""
 
 	// If params has either a width or _both_ height and aspect ratio,
 	// build a dpr-based srcset attribute.
-	if hasWidth || (hasHeight && hasAspectRatio) {
+	if hasWidth || hasHeight {
 		return b.buildSrcSetDpr(path, urlParams, opts.variableQuality)
 	}
 
