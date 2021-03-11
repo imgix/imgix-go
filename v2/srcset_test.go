@@ -73,6 +73,18 @@ func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func TestURLBuilder_CreateSrcSetFixedH(t *testing.T) {
+	c := testClient()
+	params := []IxParam{Param("h", "320")}
+	expected := "https://test.imgix.net/image.png?dpr=1&h=320&q=75 1x,\n" +
+		"https://test.imgix.net/image.png?dpr=2&h=320&q=50 2x,\n" +
+		"https://test.imgix.net/image.png?dpr=3&h=320&q=35 3x,\n" +
+		"https://test.imgix.net/image.png?dpr=4&h=320&q=23 4x,\n" +
+		"https://test.imgix.net/image.png?dpr=5&h=320&q=20 5x"
+	actual := c.CreateSrcset("image.png", params, WithVariableQuality(true))
+	assert.Equal(t, expected, actual)
+}
+
 func TestURLBuilder_CreateSrcsetFixedHandARImplicitVarQuality(t *testing.T) {
 	// Same as above, but omitting WithVariableQuality(true) to show that variable
 	// quality is the implicit-default.
