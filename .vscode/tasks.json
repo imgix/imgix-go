@@ -4,6 +4,16 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "go: get deps",
+      "type": "shell",
+      "command": "go",
+      "args": ["get","github.com/stretchr/testify", "golang.org/x/tools/cmd/cover"],
+      "group": "test",
+      "problemMatcher": [
+        "$go"
+      ]
+    },
+    {
       "label": "go: fmt",
       "type": "shell",
       "command": "cd ./v2 && go fmt ",
@@ -23,16 +33,6 @@
       },
       "dependsOn": "go: fmt"
       ,
-      "problemMatcher": [
-        "$go"
-      ]
-    },
-    {
-      "label": "go: get deps",
-      "type": "shell",
-      "command": "go",
-      "args": ["get","github.com/stretchr/testify", "golang.org/x/tools/cmd/cover"],
-      "group": "test",
       "problemMatcher": [
         "$go"
       ]
