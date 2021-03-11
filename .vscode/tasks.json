@@ -1,0 +1,52 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "go: fmt",
+      "type": "shell",
+      "command": "cd ./v2 && go fmt ",
+      "group": "test",
+      "dependsOn": ["go: get deps"],
+      "problemMatcher": [
+        "$go"
+      ]
+    },
+    {
+      "label": "go: test",
+      "type": "shell",
+      "command": "cd ./v2 && go test -cover",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "dependsOn": "go: fmt"
+      ,
+      "problemMatcher": [
+        "$go"
+      ]
+    },
+    {
+      "label": "go: get deps",
+      "type": "shell",
+      "command": "go",
+      "args": ["get","github.com/stretchr/testify", "golang.org/x/tools/cmd/cover"],
+      "group": "test",
+      "problemMatcher": [
+        "$go"
+      ]
+    },
+    {
+      "label": "go: mod tidy",
+      "type": "shell",
+      "command": "go",
+      "args": [
+        "mod", "tidy"
+      ],
+      "problemMatcher": [
+        "$go"
+      ]
+    }
+  ]
+}
