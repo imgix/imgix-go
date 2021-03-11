@@ -141,9 +141,9 @@ https://demos.imgix.net/image.png?w=8192&s=1288314bbb33a4f441100b899dd67a00 8192
 
 ### Fixed-Width Images
 
-In cases where enough information is provided about an image's dimensions, `CreateSrcset` will build a srcset that will allow for an image to be served at different resolutions. The parameters taken into consideration when determining if an image is fixed-width are `w`, `h`, and `ar`.
+In cases where enough information is provided about an image's dimensions, `CreateSrcset` will build a srcset that will allow for an image to be served at different resolutions. The parameters taken into consideration when determining if an image is fixed-width are `w` and `h`.
 
-By invoking `CreateSrcset` with either a width **or** the height and aspect ratio in the parameters, a fixed-width srcset will be generated. Wherein, the image width is fixed, but the pixel density varies.
+By invoking `CreateSrcset` with either a width **or** height in the parameters, a fixed-width srcset will be generated. Wherein, the image width is fixed, but the pixel density varies.
 
 ```go
 ub := ix.NewURLBuilder("demo.imgix.net", ix.WithLibParam(false))
