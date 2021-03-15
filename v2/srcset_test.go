@@ -1,6 +1,7 @@
 package imgix
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -71,6 +72,19 @@ func TestURLBuilder_CreateSrcSetFixedHandAR(t *testing.T) {
 		"https://test.imgix.net/image.png?ar=4%3A3&dpr=5&h=320&q=20 5x"
 	actual := c.CreateSrcset("image.png", params, WithVariableQuality(true))
 	assert.Equal(t, expected, actual)
+}
+
+func TestURLBuilder_CreateSrcSetFixedHInDprForm(t *testing.T) {
+	c := testClient()
+	params := []IxParam{Param("h", "320")}
+	expected := [5]string{"1x", "2x", "3x", "4x", "5x"}
+	srcset := c.CreateSrcset("image.png", params, WithVariableQuality(true))
+	src := strings.Split(srcset, ",")
+
+	for i := 0; i < len(src); i++ {
+		dpr := strings.Split(src[i], " ")[1]
+		assert.Contains(t, expected, dpr)
+	}
 }
 
 func TestURLBuilder_CreateSrcSetFixedH(t *testing.T) {
