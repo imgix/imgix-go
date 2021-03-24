@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [v2.0.3](https://github.com/imgix/imgix-go/compare/2.0.2...2.0.3) - March 23, 2021
+
+### Changes
+The changes in this release change the way fixed width source sets are generated when a height parameter is also present. Previously, either the width or height and aspect ratio parameters had to be present for the generated source set to be DPR based. Now, only width or height paramters have to be present.
+
+- fix: dpr srcset when only h param ([#21](https://github.com/imgix/imgix-go/pull/21))
+- docs: update travis badge to travis-ci.com ([#19](https://github.com/imgix/imgix-go/pull/19))
+
 ## [v2.0.2](https://github.com/imgix/imgix-go/compare/2.0.1...2.0.2) - October 6, 2020
 
 ### Changes
