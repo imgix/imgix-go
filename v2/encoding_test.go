@@ -162,3 +162,33 @@ func TestEncoding_encodePathProxyRaw(t *testing.T) {
 		t.Errorf("\ngot:  %s\nwant: %s", got, want)
 	}
 }
+
+func TestEncoding_encodeReservedDelimiters(t *testing.T) {
+	const path = " <>[]{}|\\^%.jpg"
+	const want = "/%20%3C%3E%5B%5D%7B%7D%7C%5C%5E%25.jpg"
+	got := sanitizePath(path)
+
+	if got != want {
+		t.Errorf("\ngot:  %s\nwant: %s", got, want)
+	}
+}
+
+func TestEncoding_encodeReservedCharacters(t *testing.T) {
+	const path = "&$+,:;=?@#.jpg"
+	const want = "/&$%2B%2C:%3B=%3F@%23.jpg"
+	got := sanitizePath(path)
+
+	if got != want {
+		t.Errorf("\ngot:  %s\nwant: %s", got, want)
+	}
+}
+
+func TestEncoding_encodeUnicode(t *testing.T) {
+	const path = "ساندویچ.jpg"
+	const want = "/%D8%B3%D8%A7%D9%86%D8%AF%D9%88%DB%8C%DA%86.jpg"
+	got := sanitizePath(path)
+
+	if got != want {
+		t.Errorf("\ngot:  %s\nwant: %s", got, want)
+	}
+}
