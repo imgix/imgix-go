@@ -50,16 +50,14 @@ type SrcsetOption func(opt *SrcsetOpts)
 // IxParam parameters, and a set of SrcsetOptions, this function infers
 // which kind of srcset attribute to create.
 //
-// If the params contain a width parameter or both height and aspect
-// ratio parameters, a fixed-width srcset attribute will be created.
-// This fixed-width srcset attribute will be dpr-based and have variable
-// quality enabled by default. Variable quality can be disabled by
-// passing WithVariableQuality(false).
+// If the params contain a width or height parameter, a fixed-width srcset 
+// attribute will be created. This fixed-width srcset attribute will be
+// dpr-based and have variable quality enabled by default. Variable
+// quality can be disabled by passing WithVariableQuality(false).
 //
-// Otherwise if no explicit width, height, or aspect ratio were found
-// this function will create a fluid-width srcset attribute wherein
-// each URL (or image candidate string) is described by a width in the
-// specified width-range.
+// Otherwise if no explicit width or height were found this function will
+// create a fluid-width srcset attribute wherein each URL (or image candidate
+// string) is described by a width in specified width range.
 func (b *URLBuilder) CreateSrcset(
 	path string,
 	params []IxParam,
@@ -218,28 +216,6 @@ func TargetWidths(minWidth int, maxWidth int, tolerance float64) []int {
 		resolutions = append(resolutions, end)
 	}
 	return resolutions
-}
-
-// isDprBased determines if we can infer from params whether we need
-// to create a dpr-based srcset attribute. If a width ("w") is present
-// or if both the height ("h") and the aspect ratio ("ar") are present,
-// then we can infer the desired srcset is dpr-based.
-func (b *URLBuilder) isDprBased(params url.Values) bool {
-	const EmptyStr = ""
-	hasWidth := params.Get("w")
-	hasHeight := params.Get("h")
-	hasAspectRatio := params.Get("ar")
-
-	if hasWidth != EmptyStr {
-		return true
-	}
-
-	if hasHeight != EmptyStr && hasAspectRatio != EmptyStr {
-		return true
-	}
-	// Getting "w", "h", and "ar" returned empty strings so none are
-	// present in the params, this is _not_ a dpr-based srcset.
-	return false
 }
 
 // isNotCustom takes minWidth, maxWidth, and tolerance values and
