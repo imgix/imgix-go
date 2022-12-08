@@ -1,0 +1,27 @@
+version: 2.1
+orbs:
+  go: circleci/go@1.7.1
+
+jobs:
+  test:
+    parameters:
+      version:
+        default: "current"
+        description: Go version to install
+        type: string
+    docker:
+      - image: cimg/go:<<parameters.version>>
+    resource_class: large
+    steps:
+      - checkout
+      - run: make
+
+workflows:
+  test:
+    jobs:
+      - test:
+          matrix:
+            parameters:
+              version:
+                - "1.19"
+                - "1.18"
