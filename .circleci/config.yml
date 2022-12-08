@@ -6,7 +6,7 @@ jobs:
   test:
     parameters:
       version:
-        default: "current"
+        default: "1.19"
         description: Go version to install
         type: string
     docker:
