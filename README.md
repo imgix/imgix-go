@@ -1,6 +1,6 @@
 <!-- ix-docs-ignore -->
 <!-- Badges -->
-![imgix logo](https://assets.imgix.net/sdk-imgix-logo.svg)
+![imgix logo](https://assets.imgix.net/sdk-imgix-logo-new.svg)
 
 `imgix-go` is a client library for generating image URLs with [imgix](https://www.imgix.com/).
 
